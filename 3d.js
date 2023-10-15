@@ -153,10 +153,12 @@ function project(points3D, width, height) {
   let point2D = new Array(points3D.length);
 
   for (let i = 0; i < points3D.length; i++) {
+    const angle = 60;
     let p = points3D[i];
-
-    let x = p.x * (LengthFocal / p.z) + width * 0.5;
-    let y = p.y * (LengthFocal / p.z) + height * 0.5;
+    let size = (CanvasWidth > CanvasHeight ? CanvasWidth : CanvasHeight) * 0.5;
+    let fov = 1 / Math.tan((angle * 0.5 * Math.PI) / 180);
+    let x = (p.x / p.z) * fov * size + width * 0.5;
+    let y = (p.y / p.z) * fov * size + height * 0.5;
 
     point2D[i] = new Point2D(x, y);
   }

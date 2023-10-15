@@ -1,11 +1,11 @@
-class Point2D {
+class Vector2 {
   constructor(x, y) {
     this.x = x;
     this.y = y;
   }
 }
 
-class Point3D {
+class Vector3 {
   constructor(x, y, z) {
     this.x = x;
     this.y = y;
@@ -13,34 +13,17 @@ class Point3D {
   }
 }
 
-class Cube {
-  constructor(posX, posY, posZ, rotX, rotY, size) {
+class Geometry {
+  constructor(posX, posY, posZ, rotX, rotY, vertices, triangles) {
     this.posX = posX;
     this.posY = posY;
     this.posZ = posZ;
     this.rotX = rotX;
     this.rotY = rotY;
-    this.size = size;
 
-    this.vertices = [
-      new Point3D(-size / 2, -size / 2, -size / 2),
-      new Point3D(+size / 2, -size / 2, -size / 2),
-      new Point3D(+size / 2, +size / 2, -size / 2),
-      new Point3D(-size / 2, +size / 2, -size / 2),
-      new Point3D(-size / 2, -size / 2, +size / 2),
-      new Point3D(+size / 2, -size / 2, +size / 2),
-      new Point3D(+size / 2, +size / 2, +size / 2),
-      new Point3D(-size / 2, +size / 2, +size / 2),
-    ];
+    this.vertices = vertices;
 
-    this.faces = [
-      [0, 1, 2, 3],
-      [0, 4, 5, 1],
-      [1, 5, 6, 2],
-      [3, 2, 6, 7],
-      [0, 3, 7, 4],
-      [4, 7, 6, 5],
-    ];
+    this.triangles = triangles;
   }
 }
 
@@ -49,7 +32,32 @@ const CanvasWidth = 600;
 const CanvasHeight = 600;
 const FrameRate = 60;
 
-let cube = new Cube(0, 0, 0, 0, 0, 100);
+const size = 100;
+let cube = new Geometry(
+  0,
+  0,
+  0,
+  0,
+  0,
+  [
+    new Vector3(-size / 2, -size / 2, -size / 2),
+    new Vector3(+size / 2, -size / 2, -size / 2),
+    new Vector3(+size / 2, +size / 2, -size / 2),
+    new Vector3(-size / 2, +size / 2, -size / 2),
+    new Vector3(-size / 2, -size / 2, +size / 2),
+    new Vector3(+size / 2, -size / 2, +size / 2),
+    new Vector3(+size / 2, +size / 2, +size / 2),
+    new Vector3(-size / 2, +size / 2, +size / 2),
+  ],
+  [
+    [0, 1, 2, 3],
+    [0, 4, 5, 1],
+    [1, 5, 6, 2],
+    [3, 2, 6, 7],
+    [0, 3, 7, 4],
+    [4, 7, 6, 5],
+  ]
+);
 let context;
 
 window.onload = () => {
@@ -76,7 +84,7 @@ window.setInterval(function () {
 
   context.fillStyle = "#007FFF"; //面の色
 
-  let vertices = JSON.parse(JSON.stringify(cube.vertices));
+  const vertices = JSON.parse(JSON.stringify(cube.vertices));
 
   //Y軸回転
   const cosY = Math.cos(toDeg(-cube.rotY));
@@ -112,22 +120,22 @@ window.setInterval(function () {
     vertices[i].y -= cube.posY;
     vertices[i].z += cube.posZ;
   }
-  let drawVertices = project(vertices, CanvasWidth, CanvasHeight);
+  const drawVertices = project(vertices, CanvasWidth, CanvasHeight);
 
   //各面の描画
-  for (let index = cube.faces.length - 1; index > -1; --index) {
-    let face = cube.faces[index];
+  for (let index = cube.triangles.length - 1; index > -1; --index) {
+    const tri = cube.triangles[index];
 
     //外積を求める
-    let p1 = vertices[face[0]];
-    let p2 = vertices[face[1]];
-    let p3 = vertices[face[2]];
+    const p1 = vertices[tri[0]];
+    const p2 = vertices[tri[1]];
+    const p3 = vertices[tri[2]];
 
-    let v1 = new Point3D(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z);
-    let v2 = new Point3D(p3.x - p1.x, p3.y - p1.y, p3.z - p1.z);
+    const v1 = new Vector3(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z);
+    const v2 = new Vector3(p3.x - p1.x, p3.y - p1.y, p3.z - p1.z);
 
     //求めた値
-    let n = new Point3D(
+    const n = new Vector3(
       v1.y * v2.z - v1.z * v2.y,
       v1.z * v2.x - v1.x * v2.z,
       v1.x * v2.y - v1.y * v2.x
@@ -137,10 +145,10 @@ window.setInterval(function () {
     //表だったら描画
     if (-p1.x * n.x + -p1.y * n.y + -p1.z * n.z <= 0) {
       context.beginPath();
-      context.moveTo(drawVertices[face[0]].x, drawVertices[face[0]].y);
-      context.lineTo(drawVertices[face[1]].x, drawVertices[face[1]].y);
-      context.lineTo(drawVertices[face[2]].x, drawVertices[face[2]].y);
-      context.lineTo(drawVertices[face[3]].x, drawVertices[face[3]].y);
+      context.moveTo(drawVertices[tri[0]].x, drawVertices[tri[0]].y);
+      context.lineTo(drawVertices[tri[1]].x, drawVertices[tri[1]].y);
+      context.lineTo(drawVertices[tri[2]].x, drawVertices[tri[2]].y);
+      context.lineTo(drawVertices[tri[3]].x, drawVertices[tri[3]].y);
       context.closePath();
       context.fill();
       context.stroke();
@@ -148,22 +156,24 @@ window.setInterval(function () {
   }
 }, 1000 / FrameRate);
 
-//透視変換を用いて3次元の頂点を2次元の画面に変換する
-function project(points3D, width, height) {
-  let point2D = new Array(points3D.length);
+//透視投影変換を用いて3次元の頂点を2次元の画面に変換する
+function project(vertices, width, height) {
+  const uv = new Array(vertices.length);
 
-  for (let i = 0; i < points3D.length; i++) {
+  for (let i = 0; i < vertices.length; i++) {
     const angle = 60;
-    let p = points3D[i];
-    let size = (CanvasWidth > CanvasHeight ? CanvasWidth : CanvasHeight) * 0.5;
-    let fov = 1 / Math.tan((angle * 0.5 * Math.PI) / 180);
-    let x = (p.x / p.z) * fov * size + width * 0.5;
-    let y = (p.y / p.z) * fov * size + height * 0.5;
+    const p = vertices[i];
+    const size =
+      (CanvasWidth > CanvasHeight ? CanvasWidth : CanvasHeight) * 0.5;
+    //カメラの視野
+    const fov = 1 / Math.tan(toDeg(angle * 0.5));
+    const x = (p.x / p.z) * fov * size + width * 0.5;
+    const y = (p.y / p.z) * fov * size + height * 0.5;
 
-    point2D[i] = new Point2D(x, y);
+    uv[i] = new Vector2(x, y);
   }
 
-  return point2D;
+  return uv;
 }
 
 function updateValue(sliderId) {

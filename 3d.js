@@ -66,6 +66,32 @@ class Vector3 {
   }
 }
 
+class Color {
+  constructor(red, green, blue, alpha) {
+    this.red = clamp(red, 0, 255);
+    this.green = clamp(green, 0, 255);
+    this.blue = clamp(blue, 0, 255);
+    this.alpha = clamp(alpha, 0, 255);
+  }
+
+  toColorCode() {
+    return (
+      "#" +
+      ((1 << 24) | (this.red << 16) | (this.green << 8) | this.blue)
+        .toString(16)
+        .slice(1)
+    );
+  }
+}
+
+// class Camera {
+//   constructor(viewableAngle, nearClip, farClip) {
+//     this.viewableAngle = viewableAngle;
+//     this.nearClip = nearClip;
+//     this.farClip = farClip;
+//   }
+// }
+
 class Geometry {
   constructor(pos, rot, scale, vertices, triangles, color) {
     this.pos = pos;
@@ -92,23 +118,15 @@ class Geometry {
 const CanvasWidth = 600;
 const CanvasHeight = 600;
 const FrameRate = 60;
-const ViewableAngle = 60;
 const DirectionalLight = new Vector3(0, 0, 1);
-const BackGroundColor = "#FFFFFF";
+const BackGroundColor = new Color(255, 255, 255, 255);
+const NearClip = 0;
+const FarClip = 200;
+
+const ViewableAngle = 60;
 
 const size = 100;
 
-// let cube = new Geometry(
-//   new Vector3(0, 0, 200),
-//   new Vector3(0, 0, 0),
-//   new Vector3(1, 1, 1),
-//   [
-//     new Vector3(-size / 2, -size / 2, -size / 2),
-//     new Vector3(+size / 2, -size / 2, -size / 2),
-//     new Vector3(+size / 2, +size / 2, -size / 2),
-//   ],
-//   [[0, 1, 2]]
-// );
 let cube = new Geometry(
   new Vector3(0, 0, 0),
   new Vector3(0, 0, 0),
@@ -137,7 +155,7 @@ let cube = new Geometry(
     [5, 4, 7],
     [7, 6, 5],
   ],
-  (color = "#007FFF")
+  (color = new Color(0, 127, 255))
 );
 
 let cube2 = new Geometry(
@@ -168,7 +186,7 @@ let cube2 = new Geometry(
     [5, 4, 7],
     [7, 6, 5],
   ],
-  (color = "#FFAA00")
+  (color = new Color(255, 170, 0))
 );
 
 const geometries = [cube, cube2];
@@ -180,6 +198,10 @@ let depthEmpty = Array.from(new Array(CanvasWidth), () =>
 
 function toDeg(x) {
   return (x * Math.PI) / 180;
+}
+
+function clamp(num, min, max) {
+  return Math.min(Math.max(num, min), max);
 }
 
 window.onload = () => {
@@ -201,9 +223,14 @@ window.setInterval(draw, 1000 / FrameRate);
 let per = 0;
 
 function draw() {
-  let depth = JSON.parse(JSON.stringify(depthEmpty));
+  let imageData = context.getImageData(0, 0, CanvasWidth, CanvasHeight);
+  let buf = new ArrayBuffer(imageData.data.length);
+  let buf8 = new Uint8ClampedArray(buf);
+  let data = new Uint32Array(buf);
 
-  context.fillStyle = BackGroundColor;
+  let depthBuffer = JSON.parse(JSON.stringify(depthEmpty));
+
+  context.fillStyle = BackGroundColor.toColorCode();
   context.fillRect(0, 0, CanvasWidth, CanvasHeight);
   per = (per + 1) % 110;
 
@@ -238,7 +265,14 @@ function draw() {
       vertices[index] = v;
     }
 
-    const drawVertices = project(vertices, CanvasWidth, CanvasHeight);
+    // const vVertices = view(
+    //   vertices,
+    //   NearClip,
+    //   FarClip,
+    //   CanvasWidth,
+    //   CanvasHeight
+    // );
+    const pVertices = project(vertices, CanvasWidth, CanvasHeight);
 
     //各面の描画
     for (let index = 0; index < geometry.triangles.length; index++) {
@@ -253,10 +287,10 @@ function draw() {
       const v2 = p3.copy();
       v2.minus(p1);
 
-      const n = v1.cross(v2);
+      const normal = v1.cross(v2);
 
       //内積で表裏判断
-      const d = p1.dot(n);
+      const d = p1.dot(normal);
       //d > 0 表
       //d < 0 裏
       //d = 0 横
@@ -264,13 +298,16 @@ function draw() {
       if (d <= 0) continue;
 
       //vertices sortedの略
-      const vs = [
-        drawVertices[tri[0]],
-        drawVertices[tri[1]],
-        drawVertices[tri[2]],
-      ];
+      const vs = [pVertices[tri[0]], pVertices[tri[1]], pVertices[tri[2]]];
       //小さい順に並べる
       vs.sort((a, b) => (a.y < b.y ? -1 : 1));
+      //lightに関しての定数kなのでkl
+      const kl = lightDirectness(normal);
+      const color =
+        (255 << 24) | // alpha
+        ((geometry.color.blue * kl) << 16) | // blue
+        ((geometry.color.green * kl) << 8) | // green
+        (geometry.color.red * kl); // red
 
       for (let y = parseInt(Math.ceil(vs[0].y)); y < vs[2].y; y++) {
         if (y < 0 || y > CanvasHeight) continue;
@@ -297,29 +334,42 @@ function draw() {
           Math.max(Math.min(vs[0].x, vs[2].x), x2)
         );
 
-        //事前計算したほうが早い
-        const k = (z2 - z1) / (x2 - x1);
+        //事前計算したほうが早いので
+        //x1 == x2のときは
+        //z1 + (x - x1) * 0 = z1
+        //それ以外は
+        //z1 + (x - x1) * kzなので
+        const kz = x1 == x2 ? 0 : (z2 - z1) / (x2 - x1);
         const countX = Math.ceil(Math.max(x1, x2));
 
         for (let x = parseInt(Math.floor(Math.min(x1, x2))); x < countX; x++) {
-          const z = x2 == x1 ? z1 : z1 + (x - x1) * k;
+          //x2 == x1のときは0で割ることになるので
+          const z = z1 + (x - x1) * kz;
+          const depth = (z - NearClip) / (FarClip - NearClip);
 
           //描画しようとしているピクセルが、奥にある場合
-          if (x < 0 || x >= CanvasWidth || z > depth[x][y]) {
+          if (x < 0 || x >= CanvasWidth || depth > depthBuffer[x][y]) {
             continue;
           }
 
           //手前にあるのでデプスを更新
-          depth[x][y] = z;
-          context.beginPath();
-          context.moveTo(x, y);
-          context.lineTo(x + 1, y);
-          context.closePath();
-          context.fill();
-          context.stroke();
+          depthBuffer[x][y] = depth;
+
+          data[y * CanvasWidth + x] = color;
+
+          // console.log(depth);
+          // context.beginPath();
+          // context.moveTo(x, y);
+          // context.lineTo(x + 1, y);
+          // context.closePath();
+          // context.fill();
+          // context.stroke();
         }
       }
     }
+
+    imageData.data.set(buf8);
+    context.putImageData(imageData, 0, 0);
 
     // if (i == 0) {
     //   for (let index = geometry.triangles.length - 1; index > -1; --index) {
@@ -351,20 +401,36 @@ function draw() {
     //       context.lineWidth = 5;
     //       context.strokeText(
     //         tri[j],
-    //         drawVertices[tri[j]].x,
-    //         drawVertices[tri[j]].y
+    //         pVertices[tri[j]].x,
+    //         pVertices[tri[j]].y
     //       );
     //       context.fillStyle = "white";
     //       context.fillText(
     //         tri[j],
-    //         drawVertices[tri[j]].x,
-    //         drawVertices[tri[j]].y
+    //         pVertices[tri[j]].x,
+    //         pVertices[tri[j]].y
     //       );
     //     }
     //     context.restore();
     //   }
     // }
   }
+}
+
+function view(vertices, near, far, width, height) {
+  const viewedVertices = new Array(vertices.length);
+
+  for (let i = 0; i < vertices.length; i++) {
+    const p = vertices[i];
+    const x = ((2 * near) / width) * p.x;
+    const y = ((2 * near) / height) * p.y;
+    const z =
+      (-(far + near) / (far - near)) * p.z - (2 * near * far) / (far - near);
+    viewedVertices[i] = new Vector3(x, y, z);
+    viewedVertices[i].division(-p.z);
+  }
+
+  return viewedVertices;
 }
 
 //透視投影変換を用いて3次元の頂点を2次元の画面に変換する
@@ -383,6 +449,17 @@ function project(vertices, width, height) {
   }
 
   return projectedVertices;
+}
+
+function lightDirectness(normal) {
+  let n = normal.copy();
+  n.normalize();
+
+  //法線ベクトルを視点(Z方向)から見て正の方向になるようにする
+  n = n.z > 0 ? n : n.multiply(-1);
+
+  //光が三角形に真っすぐに当たっている割合
+  return clamp(0, 1, DirectionalLight.dot(n));
 }
 
 function updateValue(sliderId) {

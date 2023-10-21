@@ -20,16 +20,34 @@
             <label for="posZ">PosZ:</label>
             <input type="range" id="posZ" min="0" max="800" value="200" step="1" oninput="updateValue('posZ')">
             <p>Selected value: <span id="posZValue">0</span></p>
-            <br>
+        </div>
+        <div>
             <label for="rotX">RotX:</label>
             <input type="range" id="rotX" min="-180" max="180" value="45" step="1" oninput="updateValue('rotX')">
             <p>Selected value: <span id="rotXValue">0</span></p>
-
+            
             <label for="rotY">RotY:</label>
             <input type="range" id="rotY" min="-180" max="180" value="45" step="1" oninput="updateValue('rotY')">
             <p>Selected value: <span id="rotYValue">0</span></p>
+            
+            <label for="rotZ">RotZ:</label>
+            <input type="range" id="rotZ" min="-180" max="180" value="45" step="1" oninput="updateValue('rotZ')">
+            <p>Selected value: <span id="rotZValue">0</span></p>
         </div>
-        <p id="result"></p>
+        <div>
+            <label for="scaleX">ScaleX:</label>
+            <input type="range" id="scaleX" min="0.1" max="2" value="1" step="0.1" oninput="updateValue('scaleX')">
+            <p>Selected value: <span id="scaleXValue">1</span></p>
+
+            <label for="scaleY">ScaleY:</label>
+            <input type="range" id="scaleY" min="0.1" max="2" value="1" step="0.1" oninput="updateValue('scaleY')">
+            <p>Selected value: <span id="scaleYValue">1</span></p>
+
+            <label for="scaleZ">ScaleZ:</label>
+            <input type="range" id="scaleZ" min="0.1" max="2" value="1" step="0.1" oninput="updateValue('scaleZ')">
+            <p>Selected value: <span id="scaleZValue">1</span></p>
+        </div>
+        <img width="200px" height="200px" src="./dir.png">
     <div>
 </body>
 

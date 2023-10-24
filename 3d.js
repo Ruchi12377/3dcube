@@ -156,8 +156,8 @@ class Texture {
 
   getPixelColor(uv) {
     return new Color(
-      Math.floor(uv.x * 5) / 5,
-      Math.floor(uv.y * 5) / 5,
+      isStepUV ? uv.x : Math.floor(uv.x * 5) / 5,
+      isStepUV ? uv.y : Math.floor(uv.y * 5) / 5,
       0,
       255
     );
@@ -205,6 +205,8 @@ let context;
 const depthEmpty = Array.from(new Array(CanvasWidth), () =>
   new Array(CanvasHeight).fill(Number.MAX_VALUE)
 );
+
+let isStepUV = false;
 
 //描画したい者たち
 const size = 100;
@@ -699,4 +701,11 @@ function updateValue(sliderId) {
       cube.scale.z = value;
       break;
   }
+}
+
+function toggleStep() {
+  //stepするかどうかのトグルを反転
+  isStepUV = isStepUV == false;
+  const button = document.getElementById("toggleStep");
+  button.textContent = "Toggle to " + (isStepUV ? "step" : "smooth");
 }

@@ -3,6 +3,15 @@ class Vector2 {
     this.x = x;
     this.y = y;
   }
+
+  copy() {
+    return new Vector2(this.x, this.y);
+  }
+
+  division(n) {
+    this.x /= n;
+    this.y /= n;
+  }
 }
 
 class Vector3 {
@@ -66,6 +75,19 @@ class Vector3 {
   }
 }
 
+class Vector4 {
+  constructor(x, y, z, w) {
+    this.x = x;
+    this.y = y;
+    this.z = z;
+    this.w = w;
+  }
+
+  copy() {
+    return new Vector3(this.x, this.y, this.z, this.w);
+  }
+}
+
 class Color {
   constructor(red, green, blue, alpha) {
     this.red = clamp(red, 0, 255);
@@ -82,6 +104,10 @@ class Color {
         .slice(1)
     );
   }
+
+  toColor32() {
+    return;
+  }
 }
 
 // class Camera {
@@ -92,15 +118,63 @@ class Color {
 //   }
 // }
 
+class Texture {
+  constructor(width, height) {
+    this.width = width;
+    this.height = height;
+    this.canvas = document.createElement("canvas");
+    this.canvas.width = this.width;
+    this.canvas.height = this.height;
+    this.drawingContext = this.canvas.getContext("2d");
+    this.imageData = null;
+  }
+
+  loadTexture(src, loaded) {
+    let img = new Image();
+    img.crossOrigin = `Anonymous`;
+
+    img.src = src;
+    img.onload = () => {
+      document.body.appendChild(this.canvas);
+
+      this.canvas.width = img.width;
+      this.canvas.height = img.height;
+      this.drawingContext.drawImage(img, 0, 0);
+
+      this.imageData = this.drawingContext.getImageData(
+        0,
+        0,
+        this.canvas.width,
+        this.canvas.height
+      );
+
+      if (loaded) {
+        loaded();
+      }
+    };
+  }
+
+  getPixelColor(uv) {
+    return new Color(
+      Math.floor(uv.x * 5) / 5,
+      Math.floor(uv.y * 5) / 5,
+      0,
+      255
+    );
+  }
+}
+
 class Geometry {
-  constructor(pos, rot, scale, vertices, triangles, color) {
+  constructor(pos, rot, scale, vertices, triangles, uvs, texture, color) {
     this.pos = pos;
     this.rot = rot;
     this.scale = scale;
 
     this.vertices = vertices;
-
     this.triangles = triangles;
+    this.uvs = uvs;
+    this.texture = texture;
+
     this.color = color;
   }
 
@@ -115,18 +189,29 @@ class Geometry {
   }
 }
 
+//定数宣言
+const FrameRate = 60;
 const CanvasWidth = 600;
 const CanvasHeight = 600;
-const FrameRate = 60;
 const DirectionalLight = new Vector3(0, 0, 1);
 const BackGroundColor = new Color(255, 255, 255, 255);
 const NearClip = 0;
-const FarClip = 200;
-
+const FarClip = 400;
 const ViewableAngle = 60;
 
-const size = 100;
+//必要な変数たち
+let context;
 
+const depthEmpty = Array.from(new Array(CanvasWidth), () =>
+  new Array(CanvasHeight).fill(Number.MAX_VALUE)
+);
+
+//描画したい者たち
+const size = 100;
+let tex = new Texture(512, 512);
+tex.loadTexture("./uv.png");
+
+/*
 let cube = new Geometry(
   new Vector3(0, 0, 0),
   new Vector3(0, 0, 0),
@@ -148,6 +233,7 @@ let cube = new Geometry(
     [6, 2, 1],
     [0, 4, 5],
     [5, 1, 0],
+
     [3, 7, 4],
     [4, 0, 3],
     [2, 6, 7],
@@ -155,7 +241,75 @@ let cube = new Geometry(
     [5, 4, 7],
     [7, 6, 5],
   ],
-  (color = new Color(0, 127, 255))
+  [
+    new Vector2(0, 1),
+    new Vector2(1, 1),
+    new Vector2(0, 0),
+
+    new Vector2(0, 0),
+    new Vector2(0, 1),
+    new Vector2(1, 0),
+
+    new Vector2(0, 1),
+    new Vector2(1, 1),
+    new Vector2(1, 0),
+
+    new Vector2(1, 0),
+    new Vector2(0, 0),
+    new Vector2(0, 1),
+
+    new Vector2(0, 1),
+    new Vector2(1, 1),
+    new Vector2(1, 0),
+
+    new Vector2(1, 0),
+    new Vector2(0, 0),
+    new Vector2(0, 1),
+
+    //てきとう
+    new Vector2(1, 0),
+    new Vector2(0, 0),
+    new Vector2(0, 1),
+    new Vector2(1, 0),
+    new Vector2(0, 0),
+    new Vector2(0, 1),
+    new Vector2(1, 0),
+    new Vector2(0, 0),
+    new Vector2(0, 1),
+    new Vector2(1, 0),
+    new Vector2(0, 0),
+    new Vector2(0, 1),
+    new Vector2(1, 0),
+    new Vector2(0, 0),
+    new Vector2(0, 1),
+    new Vector2(1, 0),
+    new Vector2(0, 0),
+    new Vector2(0, 1),
+  ],
+  tex,
+  (color = new Color(0, 127, 255, 255))
+);*/
+
+let cube = new Geometry(
+  new Vector3(0, 0, 0),
+  new Vector3(0, 0, 0),
+  new Vector3(1, 1, 1),
+  [
+    new Vector3(-50, 50, 0),
+    new Vector3(50, -50, 0),
+    new Vector3(-50, -50, 0),
+    new Vector3(50, 50, 0),
+  ],
+  [
+    [0, 1, 2],
+    [0, 3, 1],
+  ],
+  [
+    [new Vector2(0, 1), new Vector2(1, 0), new Vector2(0, 0)],
+    [new Vector2(0, 1), new Vector2(1, 1), new Vector2(1, 0)],
+  ],
+  tex,
+  (color = new Color(0, 127, 255, 255))
 );
 
 let cube2 = new Geometry(
@@ -186,15 +340,12 @@ let cube2 = new Geometry(
     [5, 4, 7],
     [7, 6, 5],
   ],
-  (color = new Color(255, 170, 0))
+  [],
+  tex,
+  (color = new Color(255, 170, 0, 255))
 );
 
-const geometries = [cube, cube2];
-let context;
-
-let depthEmpty = Array.from(new Array(CanvasWidth), () =>
-  new Array(CanvasHeight).fill(Number.MAX_VALUE)
-);
+const geometries = [cube /*, cube2*/];
 
 function toDeg(x) {
   return (x * Math.PI) / 180;
@@ -205,9 +356,9 @@ function clamp(num, min, max) {
 }
 
 window.onload = () => {
-  context = document.querySelector("canvas").getContext("2d");
+  const canvas = document.getElementById("canvas");
+  context = canvas.getContext("2d");
 
-  const canvas = document.getElementById("Canvas");
   canvas.width = CanvasWidth;
   canvas.height = CanvasHeight;
 
@@ -220,7 +371,14 @@ window.onload = () => {
 
 window.setInterval(draw, 1000 / FrameRate);
 
-let per = 0;
+function shadedColor(color, intensity) {
+  return new Color(
+    color.red * intensity,
+    color.green * intensity,
+    color.blue * intensity,
+    color.alpha
+  );
+}
 
 function draw() {
   let imageData = context.getImageData(0, 0, CanvasWidth, CanvasHeight);
@@ -232,38 +390,19 @@ function draw() {
 
   context.fillStyle = BackGroundColor.toColorCode();
   context.fillRect(0, 0, CanvasWidth, CanvasHeight);
-  per = (per + 1) % 110;
+
+  const after = new Array();
 
   for (let i = 0; i < geometries.length; i++) {
     let geometry = geometries[i];
     context.strokeStyle = geometry.color;
     const vertices = geometry.copiedVertices();
-
-    //回転
-    const cosX = Math.cos(toDeg(-geometry.rot.x));
-    const sinX = Math.sin(toDeg(-geometry.rot.x));
-    const cosY = Math.cos(toDeg(geometry.rot.y));
-    const sinY = Math.sin(toDeg(geometry.rot.y));
-    const cosZ = Math.cos(toDeg(-geometry.rot.z));
-    const sinZ = Math.sin(toDeg(-geometry.rot.z));
-
-    //頂点の回転、拡大縮小、平行移動
-    for (let index = vertices.length - 1; index > -1; --index) {
-      v = vertices[index];
-      //拡大縮小
-      v.scale(geometry.scale);
-      //ZXYの回転のほうが都合が良い
-      //Z軸回転
-      v = new Vector3(v.x * cosZ - v.y * sinZ, v.x * sinZ + v.y * cosZ, v.z);
-      //X軸回転
-      v = new Vector3(v.x, v.y * cosX - v.z * sinX, v.y * sinX + v.z * cosX);
-      //Y軸回転
-      v = new Vector3(v.z * sinY + v.x * cosY, v.y, v.z * cosY - v.x * sinY);
-      //平行移動
-      //yだけ逆になってる
-      v.add(new Vector3(geometry.pos.x, -geometry.pos.y, geometry.pos.z));
-      vertices[index] = v;
+    for (let j = 0; j < vertices.length; j++) {
+      const v = vertices[j];
+      vertices[j] = new Vector3(v.x, -v.y, v.z);
     }
+    // const yInvVertices = vertices;
+    const mVertices = model(vertices, geometry);
 
     // const vVertices = view(
     //   vertices,
@@ -272,8 +411,7 @@ function draw() {
     //   CanvasWidth,
     //   CanvasHeight
     // );
-    const pVertices = project(vertices, CanvasWidth, CanvasHeight);
-
+    const pVertices = project(mVertices, CanvasWidth, CanvasHeight);
     //各面の描画
     for (let index = 0; index < geometry.triangles.length; index++) {
       const tri = geometry.triangles[index];
@@ -297,42 +435,74 @@ function draw() {
       //真横と裏は描画しない
       if (d <= 0) continue;
 
+      if (i == 0) {
+        for (let j = 0; j < 3; j++) {
+          after.push([tri[j], pVertices[tri[j]].x, pVertices[tri[j]].y]);
+        }
+      }
+
       //vertices sortedの略
-      const vs = [pVertices[tri[0]], pVertices[tri[1]], pVertices[tri[2]]];
+      let vs = [
+        [pVertices[tri[0]], geometry.uvs[index][0]],
+        [pVertices[tri[1]], geometry.uvs[index][1]],
+        [pVertices[tri[2]], geometry.uvs[index][2]],
+      ];
       //小さい順に並べる
-      vs.sort((a, b) => (a.y < b.y ? -1 : 1));
-      //lightに関しての定数kなのでkl
-      const kl = lightDirectness(normal);
-      const color =
-        (255 << 24) | // alpha
-        ((geometry.color.blue * kl) << 16) | // blue
-        ((geometry.color.green * kl) << 8) | // green
-        (geometry.color.red * kl); // red
+      vs.sort((a, b) => (a[0].y < b[0].y ? -1 : 1));
+      const uvs = [vs[0][1].copy(), vs[1][1].copy(), vs[2][1].copy()];
+
+      //vsのソートされた順番に合わせる
+      vs = vs.map((x) => x[0]);
+
+      for (let j = 0; j < 3; j++) {
+        uvs[j] = new Vector3(
+          uvs[j].x / vs[j].w,
+          uvs[j].y / vs[j].w,
+          1 / vs[j].w
+        );
+      }
 
       for (let y = parseInt(Math.ceil(vs[0].y)); y < vs[2].y; y++) {
-        if (y < 0 || y > CanvasHeight) continue;
-        // if (y / vs[2].y > per / 100) continue;
+        if (y < 0 || y >= CanvasHeight) continue;
 
-        let p = Math.abs(vs[0].y - vs[1].y) < 0.1 || y >= vs[1].y ? 1 : 0;
-        let x1 =
+        const p = Math.abs(vs[0].y - vs[1].y) < 0.1 || y >= vs[1].y ? 1 : 0;
+        let x1 = clamp(
+          vs[p].x,
+          vs[p + 1].x,
           vs[p].x +
-          ((y - vs[p].y) * (vs[p + 1].x - vs[p].x)) / (vs[p + 1].y - vs[p].y);
-        let z1 =
+            ((y - vs[p].y) * (vs[p + 1].x - vs[p].x)) / (vs[p + 1].y - vs[p].y)
+        );
+        const z1 =
           vs[p].z +
           ((y - vs[p].y) * (vs[p + 1].z - vs[p].z)) / (vs[p + 1].y - vs[p].y);
 
-        let x2 =
-          vs[0].x + ((y - vs[0].y) * (vs[2].x - vs[0].x)) / (vs[2].y - vs[0].y);
-        let z2 =
+        let x2 = clamp(
+          vs[0].x,
+          vs[2].x,
+          vs[0].x + ((y - vs[0].y) * (vs[2].x - vs[0].x)) / (vs[2].y - vs[0].y)
+        );
+        const z2 =
           vs[0].z + ((y - vs[0].y) * (vs[2].z - vs[0].z)) / (vs[2].y - vs[0].y);
-        x1 = Math.min(
-          Math.max(vs[p].x, vs[p + 1].x),
-          Math.max(Math.min(vs[p].x, vs[p + 1].x), x1)
-        );
-        x2 = Math.min(
-          Math.max(vs[0].x, vs[2].x),
-          Math.max(Math.min(vs[0].x, vs[2].x), x2)
-        );
+
+        const u1 =
+          uvs[p].x +
+          ((y - vs[p].y) * (uvs[p + 1].x - uvs[p].x)) / (vs[p + 1].y - vs[p].y);
+        const v1 =
+          uvs[p].y +
+          ((y - vs[p].y) * (uvs[p + 1].y - uvs[p].y)) / (vs[p + 1].y - vs[p].y);
+        const w1 =
+          uvs[p].z +
+          ((y - vs[p].y) * (uvs[p + 1].z - uvs[p].z)) / (vs[p + 1].y - vs[p].y);
+
+        const u2 =
+          uvs[0].x +
+          ((y - vs[0].y) * (uvs[2].x - uvs[0].x)) / (vs[2].y - vs[0].y);
+        const v2 =
+          uvs[0].y +
+          ((y - vs[0].y) * (uvs[2].y - uvs[0].y)) / (vs[2].y - vs[0].y);
+        const w2 =
+          uvs[0].z +
+          ((y - vs[0].y) * (uvs[2].z - uvs[0].z)) / (vs[2].y - vs[0].y);
 
         //事前計算したほうが早いので
         //x1 == x2のときは
@@ -345,78 +515,106 @@ function draw() {
         for (let x = parseInt(Math.floor(Math.min(x1, x2))); x < countX; x++) {
           //x2 == x1のときは0で割ることになるので
           const z = z1 + (x - x1) * kz;
-          const depth = (z - NearClip) / (FarClip - NearClip);
+          if (z < NearClip || z > FarClip) continue;
 
           //描画しようとしているピクセルが、奥にある場合
-          if (x < 0 || x >= CanvasWidth || depth > depthBuffer[x][y]) {
+          if (x < 0 || x >= CanvasWidth || z > depthBuffer[x][y]) {
             continue;
           }
 
           //手前にあるのでデプスを更新
-          depthBuffer[x][y] = depth;
+          depthBuffer[x][y] = z;
+
+          //lightに関しての定数kなのでkl
+          const kl = lightDirectness(normal);
+
+          // let u = u1 + (x - x1) * ku;
+          // let v = v1 + (x - x1) * kv;
+
+          let u = x2 == x1 ? u1 : u1 + ((x - x1) * (u2 - u1)) / (x2 - x1);
+          let v = x2 == x1 ? v1 : v1 + ((x - x1) * (v2 - v1)) / (x2 - x1);
+          let w = x2 == x1 ? w1 : w1 + ((x - x1) * (w2 - w1)) / (x2 - x1);
+          u /= w;
+          v /= w;
+          u = clamp(u, 0, 1); // 計算誤差対策
+          v = 1 - clamp(v, 0, 1);
+          const sampleTexture = geometry.texture.getPixelColor(
+            new Vector2(u, v)
+          );
+
+          // const color =
+          //   (255 << 24) | // alpha
+          //   (geometry.color.blue << 16) | // blue
+          //   (geometry.color.green << 8) | // green
+          //   geometry.color.red; // red
+          const color =
+            (255 << 24) | // alpha
+            ((sampleTexture.blue * 255) << 16) | // blue
+            ((sampleTexture.green * 255) << 8) | // green
+            (sampleTexture.red * 255); // red
+
+          // const color =
+          //   (255 << 24) | // alpha
+          //   (0 << 16) | // blue
+          //   ((v * 255) << 8) | // green
+          //   (u * 255); // red
 
           data[y * CanvasWidth + x] = color;
-
-          // console.log(depth);
-          // context.beginPath();
-          // context.moveTo(x, y);
-          // context.lineTo(x + 1, y);
-          // context.closePath();
-          // context.fill();
-          // context.stroke();
         }
       }
     }
+  }
 
-    imageData.data.set(buf8);
-    context.putImageData(imageData, 0, 0);
+  imageData.data.set(buf8);
+  context.putImageData(imageData, 0, 0);
 
-    // if (i == 0) {
-    //   for (let index = geometry.triangles.length - 1; index > -1; --index) {
-    //     const tri = geometry.triangles[index];
-    //     const p1 = vertices[tri[0]];
-    //     const p2 = vertices[tri[1]];
-    //     const p3 = vertices[tri[2]];
-
-    //     const v1 = p2.copy();
-    //     v1.minus(p1);
-    //     const v2 = p3.copy();
-    //     v2.minus(p1);
-
-    //     const n = v1.cross(v2);
-
-    //     //内積で表裏判断
-    //     const d = p1.dot(n);
-    //     //d > 0 表
-    //     //d < 0 裏
-    //     //d = 0 横
-    //     //真横と裏は描画しない
-    //     if (d <= 0) continue;
-
-    //     context.save();
-    //     for (let j = 0; j < 3; j++) {
-    //       context.font = "24px Sans-serif";
-    //       context.textAlign = "center";
-    //       context.strokeStyle = "black";
-    //       context.lineWidth = 5;
-    //       context.strokeText(
-    //         tri[j],
-    //         pVertices[tri[j]].x,
-    //         pVertices[tri[j]].y
-    //       );
-    //       context.fillStyle = "white";
-    //       context.fillText(
-    //         tri[j],
-    //         pVertices[tri[j]].x,
-    //         pVertices[tri[j]].y
-    //       );
-    //     }
-    //     context.restore();
-    //   }
-    // }
+  {
+    context.save();
+    for (let i = 0; i < after.length; i++) {
+      const element = after[i];
+      context.font = "24px Sans-serif";
+      context.textAlign = "center";
+      context.strokeStyle = "black";
+      context.lineWidth = 5;
+      context.strokeText(element[0], element[1], element[2]);
+      context.fillStyle = "white";
+      context.fillText(element[0], element[1], element[2]);
+    }
+    context.restore();
   }
 }
 
+function model(vertices, geometry) {
+  //回転
+  const cosX = Math.cos(toDeg(-geometry.rot.x));
+  const sinX = Math.sin(toDeg(-geometry.rot.x));
+  const cosY = Math.cos(toDeg(geometry.rot.y));
+  const sinY = Math.sin(toDeg(geometry.rot.y));
+  const cosZ = Math.cos(toDeg(-geometry.rot.z));
+  const sinZ = Math.sin(toDeg(-geometry.rot.z));
+
+  //頂点の回転、拡大縮小、平行移動
+  for (let index = vertices.length - 1; index > -1; --index) {
+    v = vertices[index];
+    //拡大縮小
+    v.scale(geometry.scale);
+    //ZXYの回転のほうが都合が良い
+    //Z軸回転
+    v = new Vector3(v.x * cosZ - v.y * sinZ, v.x * sinZ + v.y * cosZ, v.z);
+    //X軸回転
+    v = new Vector3(v.x, v.y * cosX - v.z * sinX, v.y * sinX + v.z * cosX);
+    //Y軸回転
+    v = new Vector3(v.z * sinY + v.x * cosY, v.y, v.z * cosY - v.x * sinY);
+    //平行移動
+    //yだけ逆になってる
+    v.add(new Vector3(geometry.pos.x, -geometry.pos.y, geometry.pos.z));
+    vertices[index] = v;
+  }
+
+  return vertices;
+}
+
+/*
 function view(vertices, near, far, width, height) {
   const viewedVertices = new Array(vertices.length);
 
@@ -431,7 +629,7 @@ function view(vertices, near, far, width, height) {
   }
 
   return viewedVertices;
-}
+}*/
 
 //透視投影変換を用いて3次元の頂点を2次元の画面に変換する
 function project(vertices, width, height) {
@@ -439,13 +637,16 @@ function project(vertices, width, height) {
 
   for (let i = 0; i < vertices.length; i++) {
     const p = vertices[i];
-    const size = (CanvasWidth > CanvasHeight ? CanvasWidth : CanvasHeight) / 2;
+    const a = (CanvasWidth > CanvasHeight ? CanvasWidth : CanvasHeight) / 2;
+    const q = FarClip / (FarClip - NearClip);
     //カメラの視野
-    const fov = 1 / Math.tan(toDeg(ViewableAngle / 2));
-    const x = (p.x / p.z) * fov * size + width / 2;
-    const y = (p.y / p.z) * fov * size + height / 2;
+    const f = 1 / Math.tan(toDeg(ViewableAngle / 2));
+    const x = (a * f * p.x) / p.z + width / 2;
+    const y = (a * f * p.y) / p.z + height / 2;
+    const z = p.z * q - NearClip * q;
+    const w = p.z;
 
-    projectedVertices[i] = new Vector3(x, y, p.z);
+    projectedVertices[i] = new Vector4(x, y, z, w);
   }
 
   return projectedVertices;

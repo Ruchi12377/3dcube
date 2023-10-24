@@ -1,4 +1,4 @@
-<html lang="ja">
+<!DOCTYPE html>
 
 <head>
     <meta charset="utf-8">
@@ -7,7 +7,7 @@
 
 <body>
     <div style="display: flex;">
-        <canvas id="Canvas" style="border: 1px solid;"></canvas>
+        <canvas id="canvas" style="border: 1px solid;"></canvas>
         <div>
             <label for="posX">PosX:</label>
             <input type="range" id="posX" min="-400" max="400" value="0" step="1" oninput="updateValue('posX')">
@@ -48,7 +48,8 @@
             <p>Selected value: <span id="scaleZValue">1</span></p>
         </div>
         <img width="200px" height="200px" src="./dir.png">
-    <div>
+    </div>
+    <canvas id="myCanvas"> </canvas>
 </body>
 
 </html>

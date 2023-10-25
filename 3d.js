@@ -131,8 +131,6 @@ class Texture {
 
     img.src = src;
     img.onload = () => {
-      document.body.appendChild(this.canvas);
-
       this.canvas.width = img.width;
       this.canvas.height = img.height;
       this.drawingContext.drawImage(img, 0, 0);
@@ -171,7 +169,7 @@ class Texture {
 }
 
 class Geometry {
-  constructor(pos, rot, scale, vertices, triangles, uvs, texture, color) {
+  constructor(pos, rot, scale, vertices, triangles, uvs, pixelShader, color) {
     this.pos = pos;
     this.rot = rot;
     this.scale = scale;
@@ -179,7 +177,7 @@ class Geometry {
     this.vertices = vertices;
     this.triangles = triangles;
     this.uvs = uvs;
-    this.texture = texture;
+    this.pixelShader = pixelShader;
 
     this.color = color;
   }
@@ -212,12 +210,17 @@ const depthEmpty = Array.from(new Array(CanvasWidth), () =>
   new Array(CanvasHeight).fill(Number.MAX_VALUE)
 );
 
-let isStepUV = false;
+const Alpha = new Color(0, 0, 0, 255);
 
 //描画したい者たち
 const size = 100;
-let tex = new Texture(256, 256);
-tex.loadTexture("./sample.png", () => console.log("done"));
+let mainTexture = new Texture(256, 256);
+mainTexture.loadTexture("./sample.png");
+
+let maskTexture = new Texture(32, 32);
+maskTexture.loadTexture("./noiseTexture.png");
+
+let threshold = 0.8;
 
 /*
 let cube = new Geometry(
@@ -298,6 +301,22 @@ let cube = new Geometry(
   (color = new Color(0, 127, 255, 255))
 );*/
 
+function tex2d(texture, uv) {
+  return texture.getPixelColor(uv);
+}
+
+function dissolve(uv) {
+  const color = tex2d(mainTexture, uv);
+  const mask = tex2d(maskTexture, uv);
+  const gray =
+    (mask.red / 255) * 0.2 + (mask.green / 255) * 0.7 + (mask.blue / 255) * 0.1;
+
+  if (gray < threshold) {
+    return color;
+  }
+  return;
+}
+
 let cube = new Geometry(
   new Vector3(0, 0, 0),
   new Vector3(0, 0, 0),
@@ -316,7 +335,7 @@ let cube = new Geometry(
     [new Vector2(0, 1), new Vector2(1, 0), new Vector2(0, 0)],
     [new Vector2(0, 1), new Vector2(1, 1), new Vector2(1, 0)],
   ],
-  tex,
+  dissolve,
   (color = new Color(0, 127, 255, 255))
 );
 
@@ -349,7 +368,7 @@ let cube2 = new Geometry(
     [7, 6, 5],
   ],
   [],
-  tex,
+  dissolve,
   (color = new Color(255, 170, 0, 255))
 );
 
@@ -375,6 +394,11 @@ window.onload = () => {
   updateValue("posZ");
   updateValue("rotX");
   updateValue("rotY");
+  updateValue("rotZ");
+  updateValue("scaleX");
+  updateValue("scaleY");
+  updateValue("scaleZ");
+  updateValue("threshold");
 };
 
 window.setInterval(draw, 1000 / FrameRate);
@@ -530,9 +554,6 @@ function draw() {
             continue;
           }
 
-          //手前にあるのでデプスを更新
-          depthBuffer[x][y] = z;
-
           //lightに関しての定数kなのでkl
           const kl = lightDirectness(normal);
 
@@ -546,17 +567,24 @@ function draw() {
           v /= w;
           u = clamp(u, 0, 1); // 計算誤差対策
           v = 1 - clamp(v, 0, 1);
-          const sampleTexture = geometry.texture.getPixelColor(
-            new Vector2(u, v)
-          );
 
-          const color =
-            (sampleTexture.alpha << 24) | // alpha
-            (sampleTexture.blue << 16) | // blue
-            (sampleTexture.green << 8) | // green
-            sampleTexture.red; // red
+          const color = geometry.pixelShader(new Vector2(u, v));
 
-          data[y * CanvasWidth + x] = color;
+          if (color instanceof Color == false) {
+            data[y * CanvasWidth + x] = Alpha;
+            continue;
+          }
+
+          //手前にあるのでデプスを更新
+          depthBuffer[x][y] = z;
+
+          const color32 =
+            (color.alpha << 24) | // alpha
+            (color.blue << 16) | // blue
+            (color.green << 8) | // green
+            color.red; // red
+
+          data[y * CanvasWidth + x] = color32;
         }
       }
     }
@@ -695,12 +723,8 @@ function updateValue(sliderId) {
     case "scaleZ":
       cube.scale.z = value;
       break;
+    case "threshold":
+      threshold = value;
+      break;
   }
-}
-
-function toggleStep() {
-  //stepするかどうかのトグルを反転
-  isStepUV = isStepUV == false;
-  const button = document.getElementById("toggleStep");
-  button.textContent = "Toggle to " + (isStepUV ? "step" : "smooth");
 }

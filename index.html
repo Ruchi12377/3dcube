@@ -48,8 +48,9 @@
             <p>Selected value: <span id="scaleZValue">1</span></p>
         </div>
         <div>
-            <button onclick="toggleStep()" id="toggleStep">Toggle to smooth</button>
-
+            <label for="threshold">Dissolve:</label>
+            <input type="range" id="threshold" min="0" max="1" value="1" step="0.1" oninput="updateValue('threshold')">
+            <p>Selected value: <span id="thresholdValue">1</span></p>
         </div>
         <img width="200px" height="200px" src="./dir.png">
     </div>

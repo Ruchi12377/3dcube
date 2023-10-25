@@ -104,10 +104,6 @@ class Color {
         .slice(1)
     );
   }
-
-  toColor32() {
-    return;
-  }
 }
 
 // class Camera {
@@ -155,12 +151,22 @@ class Texture {
   }
 
   getPixelColor(uv) {
-    return new Color(
-      isStepUV ? uv.x : Math.floor(uv.x * 5) / 5,
-      isStepUV ? uv.y : Math.floor(uv.y * 5) / 5,
-      0,
-      255
-    );
+    if (this.imageData == null) {
+      return new Color(255, 0, 255, 255);
+    }
+
+    const x = parseInt(uv.x * (this.width - 1));
+    const y = parseInt(uv.y * (this.height - 1));
+
+    const index = (y * this.width + x) * 4;
+    const red = this.imageData.data[index];
+    const green = this.imageData.data[index + 1];
+    const blue = this.imageData.data[index + 2];
+    const alpha = this.imageData.data[index + 3];
+
+    const color = new Color(red, green, blue, alpha);
+
+    return color;
   }
 }
 
@@ -210,8 +216,8 @@ let isStepUV = false;
 
 //描画したい者たち
 const size = 100;
-let tex = new Texture(512, 512);
-tex.loadTexture("./uv.png");
+let tex = new Texture(256, 256);
+tex.loadTexture("./sample.png", () => console.log("done"));
 
 /*
 let cube = new Geometry(
@@ -544,22 +550,11 @@ function draw() {
             new Vector2(u, v)
           );
 
-          // const color =
-          //   (255 << 24) | // alpha
-          //   (geometry.color.blue << 16) | // blue
-          //   (geometry.color.green << 8) | // green
-          //   geometry.color.red; // red
           const color =
-            (255 << 24) | // alpha
-            ((sampleTexture.blue * 255) << 16) | // blue
-            ((sampleTexture.green * 255) << 8) | // green
-            (sampleTexture.red * 255); // red
-
-          // const color =
-          //   (255 << 24) | // alpha
-          //   (0 << 16) | // blue
-          //   ((v * 255) << 8) | // green
-          //   (u * 255); // red
+            (sampleTexture.alpha << 24) | // alpha
+            (sampleTexture.blue << 16) | // blue
+            (sampleTexture.green << 8) | // green
+            sampleTexture.red; // red
 
           data[y * CanvasWidth + x] = color;
         }

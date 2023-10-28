@@ -1,150 +1,10 @@
-class Vector2 {
-  constructor(x, y) {
-    this.x = x;
-    this.y = y;
-  }
-
-  copy() {
-    return new Vector2(this.x, this.y);
-  }
-
-  add(v) {
-    this.x += v.x;
-    this.y += v.y;
-  }
-
-  multiply(n) {
-    this.x *= n;
-    this.y *= n;
-  }
-
-  division(n) {
-    this.x /= n;
-    this.y /= n;
-  }
-
-  scale(v) {
-    this.x *= v.x;
-    this.y *= v.y;
-  }
-}
-
-class Vector3 {
-  constructor(x, y, z) {
-    this.x = x;
-    this.y = y;
-    this.z = z;
-  }
-
-  copy() {
-    return new Vector3(this.x, this.y, this.z);
-  }
-
-  add(v) {
-    this.x += v.x;
-    this.y += v.y;
-    this.z += v.z;
-  }
-
-  minus(v) {
-    this.x -= v.x;
-    this.y -= v.y;
-    this.z -= v.z;
-  }
-
-  multiply(n) {
-    this.x *= n;
-    this.y *= n;
-    this.z *= n;
-  }
-
-  division(n) {
-    this.x /= n;
-    this.y /= n;
-    this.z /= n;
-  }
-
-  scale(v) {
-    this.x *= v.x;
-    this.y *= v.y;
-    this.z *= v.z;
-  }
-
-  //外積
-  cross(v) {
-    return new Vector3(
-      this.y * v.z - this.z * v.y,
-      this.z * v.x - this.x * v.z,
-      this.x * v.y - this.y * v.x
-    );
-  }
-
-  //内積
-  dot(v) {
-    return this.x * v.x + this.y * v.y + this.z * v.z;
-  }
-
-  normalize() {
-    length = Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
-    if (length > 0) {
-      this.division(length);
-    }
-  }
-
-  normalized() {
-    length = Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
-    if (length > 0) {
-      this.division(length);
-    }
-
-    return new Vector3(x / n, y / n, z / n);
-  }
-}
-
-class Vector4 {
-  constructor(x, y, z, w) {
-    this.x = x;
-    this.y = y;
-    this.z = z;
-    this.w = w;
-  }
-
-  copy() {
-    return new Vector3(this.x, this.y, this.z, this.w);
-  }
-}
-
-class Color {
-  constructor(red, green, blue, alpha) {
-    this.red = clamp(red, 0, 255);
-    this.green = clamp(green, 0, 255);
-    this.blue = clamp(blue, 0, 255);
-    this.alpha = clamp(alpha, 0, 255);
-  }
-
-  toColorCode() {
-    return (
-      "#" +
-      ((1 << 24) | (this.red << 16) | (this.green << 8) | this.blue)
-        .toString(16)
-        .slice(1)
-    );
-  }
-
-  toColor32() {
-    return (
-      (this.alpha << 24) | (this.blue << 16) | (this.green << 8) | this.red
-    );
-  }
-
-  toLinear() {
-    let lr = this.red / 255;
-    let lg = this.green / 255;
-    let lb = this.blue / 255;
-
-    return new Vector3(lr, lg, lb);
-  }
-}
+import { Mathf } from "./src/math.js";
+import { Vector2 } from "./src/vector2.js";
+import { Vector3 } from "./src/vector3.js";
+import { Vector4 } from "./src/vector4.js";
+import { Color } from "./src/color.js";
+import { Texture } from "./src/texture.js";
+import { Geometry } from "./src/geometry.js";
 
 // class Camera {
 //   constructor(viewableAngle, nearClip, farClip) {
@@ -153,85 +13,6 @@ class Color {
 //     this.farClip = farClip;
 //   }
 // }
-
-class Texture {
-  constructor(width, height) {
-    this.width = width;
-    this.height = height;
-    this.canvas = document.createElement("canvas");
-    this.canvas.width = this.width;
-    this.canvas.height = this.height;
-    this.drawingContext = this.canvas.getContext("2d");
-    this.imageData = null;
-  }
-
-  loadTexture(src, loaded) {
-    let img = new Image();
-    img.crossOrigin = `Anonymous`;
-
-    img.src = src;
-    img.onload = () => {
-      this.canvas.width = img.width;
-      this.canvas.height = img.height;
-      this.drawingContext.drawImage(img, 0, 0);
-
-      this.imageData = this.drawingContext.getImageData(
-        0,
-        0,
-        this.canvas.width,
-        this.canvas.height
-      );
-
-      if (loaded) {
-        loaded();
-      }
-    };
-  }
-
-  getPixelColor(uv) {
-    if (this.imageData == null) {
-      return new Color(255, 0, 255, 255);
-    }
-
-    const x = parseInt(uv.x * (this.width - 1));
-    const y = parseInt(uv.y * (this.height - 1));
-
-    const index = (y * this.width + x) * 4;
-    const red = this.imageData.data[index];
-    const green = this.imageData.data[index + 1];
-    const blue = this.imageData.data[index + 2];
-    const alpha = this.imageData.data[index + 3];
-
-    const color = new Color(red, green, blue, alpha);
-
-    return color;
-  }
-}
-
-class Geometry {
-  constructor(pos, rot, scale, vertices, triangles, uvs, pixelShader, color) {
-    this.pos = pos;
-    this.rot = rot;
-    this.scale = scale;
-
-    this.vertices = vertices;
-    this.triangles = triangles;
-    this.uvs = uvs;
-    this.pixelShader = pixelShader;
-
-    this.color = color;
-  }
-
-  copiedVertices() {
-    const length = this.vertices.length;
-    const newVertices = new Array(length);
-    for (let i = 0; i < length; i++) {
-      newVertices[i] = this.vertices[i].copy();
-    }
-
-    return newVertices;
-  }
-}
 
 //定数宣言
 const FrameRate = 60;
@@ -244,7 +25,7 @@ const FarClip = 400;
 const ViewableAngle = 60;
 
 //アンチエイリアス
-function swap() {
+export function swap() {
   anti = anti == false;
 }
 let anti = true;
@@ -260,11 +41,11 @@ const Alpha = new Color(0, 0, 0, 255);
 
 //描画したい者たち
 const size = 100;
-let mainTexture = new Texture(600, 600);
-mainTexture.loadTexture("./texture.png");
+let mainTexture = new Texture(512, 512);
+mainTexture.loadTexture("./images/texture.png");
 
-let maskTexture = new Texture(256, 256);
-maskTexture.loadTexture("../noise/noiseTexture.png");
+let maskTexture = new Texture(32, 32);
+maskTexture.loadTexture("./images/noiseTexture.png");
 
 let threshold = 0.8;
 
@@ -347,20 +128,15 @@ let cube = new Geometry(
   (color = new Color(0, 127, 255, 255))
 );*/
 
-function tex2d(texture, uv) {
-  return texture.getPixelColor(uv);
-}
-
 function dissolve(uv) {
-  const color = tex2d(mainTexture, uv);
-  // const mask = tex2d(maskTexture, uv);
-  // const gray =
-  // (mask.red / 255) * 0.2 + (mask.green / 255) * 0.7 + (mask.blue / 255) * 0.1;
+  const color = mainTexture.getPixelColor(uv);
+  const mask = maskTexture.getPixelColor(uv);
+  const gray = (mask.red / 255) * 0.2 + (mask.green / 255) * 0.7 + (mask.blue / 255) * 0.1;
 
-  // if (gray < threshold) {
-  return color;
-  // }
-  // return;
+  if (gray < threshold) {
+    return color;
+  }
+  return;
 }
 
 let cube = new Geometry(
@@ -382,7 +158,7 @@ let cube = new Geometry(
     [new Vector2(0, 1), new Vector2(1, 1), new Vector2(1, 0)],
   ],
   dissolve,
-  (color = new Color(0, 127, 255, 255))
+  new Color(0, 127, 255, 255)
 );
 
 let cube2 = new Geometry(
@@ -415,18 +191,10 @@ let cube2 = new Geometry(
   ],
   [],
   dissolve,
-  (color = new Color(255, 170, 0, 255))
+  new Color(255, 170, 0, 255)
 );
 
 const geometries = [cube /*, cube2*/];
-
-function toDeg(x) {
-  return (x * Math.PI) / 180;
-}
-
-function clamp(num, min, max) {
-  return Math.min(Math.max(num, min), max);
-}
 
 window.onload = () => {
   const canvas = document.getElementById("canvas");
@@ -545,17 +313,17 @@ function draw() {
         if (y < 0 || y >= CanvasHeight) continue;
 
         const p = Math.abs(vs[0].y - vs[1].y) < 0.1 || y >= vs[1].y ? 1 : 0;
-        let x1 = clamp(
+        let x1 = Mathf.clamp(
           vs[p].x,
           vs[p + 1].x,
           vs[p].x +
-            ((y - vs[p].y) * (vs[p + 1].x - vs[p].x)) / (vs[p + 1].y - vs[p].y)
+          ((y - vs[p].y) * (vs[p + 1].x - vs[p].x)) / (vs[p + 1].y - vs[p].y)
         );
         const z1 =
           vs[p].z +
           ((y - vs[p].y) * (vs[p + 1].z - vs[p].z)) / (vs[p + 1].y - vs[p].y);
 
-        let x2 = clamp(
+        let x2 = Mathf.clamp(
           vs[0].x,
           vs[2].x,
           vs[0].x + ((y - vs[0].y) * (vs[2].x - vs[0].x)) / (vs[2].y - vs[0].y)
@@ -612,8 +380,8 @@ function draw() {
           let w = x2 == x1 ? w1 : w1 + ((x - x1) * (w2 - w1)) / (x2 - x1);
           u /= w;
           v /= w;
-          u = clamp(u, 0, 1); // 計算誤差対策
-          v = 1 - clamp(v, 0, 1);
+          u = Mathf.clamp(u, 0, 1); // 計算誤差対策
+          v = 1 - Mathf.clamp(v, 0, 1);
 
           const color = geometry.pixelShader(new Vector2(u, v));
 
@@ -632,8 +400,8 @@ function draw() {
   }
 
   function getCanvasPixelColor(uv) {
-    x = parseInt(clamp(uv.x, 0, CanvasWidth));
-    y = parseInt(clamp(uv.y, 0, CanvasHeight));
+    const x = parseInt(Mathf.clamp(uv.x, 0, CanvasWidth));
+    const y = parseInt(Mathf.clamp(uv.y, 0, CanvasHeight));
 
     const color32 = data[y * CanvasWidth + x];
 
@@ -705,16 +473,16 @@ function draw() {
 
 function model(vertices, geometry) {
   //回転
-  const cosX = Math.cos(toDeg(-geometry.rot.x));
-  const sinX = Math.sin(toDeg(-geometry.rot.x));
-  const cosY = Math.cos(toDeg(geometry.rot.y));
-  const sinY = Math.sin(toDeg(geometry.rot.y));
-  const cosZ = Math.cos(toDeg(-geometry.rot.z));
-  const sinZ = Math.sin(toDeg(-geometry.rot.z));
+  const cosX = Math.cos(Mathf.toDeg(-geometry.rot.x));
+  const sinX = Math.sin(Mathf.toDeg(-geometry.rot.x));
+  const cosY = Math.cos(Mathf.toDeg(geometry.rot.y));
+  const sinY = Math.sin(Mathf.toDeg(geometry.rot.y));
+  const cosZ = Math.cos(Mathf.toDeg(-geometry.rot.z));
+  const sinZ = Math.sin(Mathf.toDeg(-geometry.rot.z));
 
   //頂点の回転、拡大縮小、平行移動
   for (let index = vertices.length - 1; index > -1; --index) {
-    v = vertices[index];
+    let v = vertices[index];
     //拡大縮小
     v.scale(geometry.scale);
     //ZXYの回転のほうが都合が良い
@@ -759,7 +527,7 @@ function project(vertices, width, height) {
     const a = (CanvasWidth > CanvasHeight ? CanvasWidth : CanvasHeight) / 2;
     const q = FarClip / (FarClip - NearClip);
     //カメラの視野
-    const f = 1 / Math.tan(toDeg(ViewableAngle / 2));
+    const f = 1 / Math.tan(Mathf.toDeg(ViewableAngle / 2));
     const x = (a * f * p.x) / p.z + width / 2;
     const y = (a * f * p.y) / p.z + height / 2;
     const z = p.z * q - NearClip * q;
@@ -779,10 +547,10 @@ function lightDirectness(normal) {
   n = n.z > 0 ? n : n.multiply(-1);
 
   //光が三角形に真っすぐに当たっている割合
-  return clamp(0, 1, DirectionalLight.dot(n));
+  return Mathf.clamp(0, 1, DirectionalLight.dot(n));
 }
 
-function updateValue(sliderId) {
+export function updateValue(sliderId) {
   var slider = document.getElementById(sliderId);
   var output = document.getElementById(
     sliderId.replace(/[^a-zA-Z]/g, "") + "Value"
@@ -822,3 +590,6 @@ function updateValue(sliderId) {
       break;
   }
 }
+
+window.swap = swap;
+window.updateValue = updateValue;

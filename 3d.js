@@ -8,9 +8,24 @@ class Vector2 {
     return new Vector2(this.x, this.y);
   }
 
+  add(v) {
+    this.x += v.x;
+    this.y += v.y;
+  }
+
+  multiply(n) {
+    this.x *= n;
+    this.y *= n;
+  }
+
   division(n) {
     this.x /= n;
     this.y /= n;
+  }
+
+  scale(v) {
+    this.x *= v.x;
+    this.y *= v.y;
   }
 }
 
@@ -71,7 +86,18 @@ class Vector3 {
 
   normalize() {
     length = Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
-    this.division(length);
+    if (length > 0) {
+      this.division(length);
+    }
+  }
+
+  normalized() {
+    length = Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
+    if (length > 0) {
+      this.division(length);
+    }
+
+    return new Vector3(x / n, y / n, z / n);
   }
 }
 
@@ -103,6 +129,20 @@ class Color {
         .toString(16)
         .slice(1)
     );
+  }
+
+  toColor32() {
+    return (
+      (this.alpha << 24) | (this.blue << 16) | (this.green << 8) | this.red
+    );
+  }
+
+  toLinear() {
+    let lr = this.red / 255;
+    let lg = this.green / 255;
+    let lb = this.blue / 255;
+
+    return new Vector3(lr, lg, lb);
   }
 }
 
@@ -203,6 +243,12 @@ const NearClip = 0;
 const FarClip = 400;
 const ViewableAngle = 60;
 
+//アンチエイリアス
+function swap() {
+  anti = anti == false;
+}
+let anti = true;
+
 //必要な変数たち
 let context;
 
@@ -214,11 +260,11 @@ const Alpha = new Color(0, 0, 0, 255);
 
 //描画したい者たち
 const size = 100;
-let mainTexture = new Texture(256, 256);
-mainTexture.loadTexture("./sample.png");
+let mainTexture = new Texture(600, 600);
+mainTexture.loadTexture("./texture.png");
 
-let maskTexture = new Texture(32, 32);
-maskTexture.loadTexture("./noiseTexture.png");
+let maskTexture = new Texture(256, 256);
+maskTexture.loadTexture("../noise/noiseTexture.png");
 
 let threshold = 0.8;
 
@@ -307,18 +353,18 @@ function tex2d(texture, uv) {
 
 function dissolve(uv) {
   const color = tex2d(mainTexture, uv);
-  const mask = tex2d(maskTexture, uv);
-  const gray =
-    (mask.red / 255) * 0.2 + (mask.green / 255) * 0.7 + (mask.blue / 255) * 0.1;
+  // const mask = tex2d(maskTexture, uv);
+  // const gray =
+  // (mask.red / 255) * 0.2 + (mask.green / 255) * 0.7 + (mask.blue / 255) * 0.1;
 
-  if (gray < threshold) {
-    return color;
-  }
-  return;
+  // if (gray < threshold) {
+  return color;
+  // }
+  // return;
 }
 
 let cube = new Geometry(
-  new Vector3(0, 0, 0),
+  new Vector3(0, 0, 100),
   new Vector3(0, 0, 0),
   new Vector3(1, 1, 1),
   [
@@ -384,10 +430,11 @@ function clamp(num, min, max) {
 
 window.onload = () => {
   const canvas = document.getElementById("canvas");
-  context = canvas.getContext("2d");
-
   canvas.width = CanvasWidth;
   canvas.height = CanvasHeight;
+
+  context = canvas.getContext("2d");
+  context.imageSmoothingEnabled = false;
 
   updateValue("posX");
   updateValue("posY");
@@ -433,7 +480,7 @@ function draw() {
       const v = vertices[j];
       vertices[j] = new Vector3(v.x, -v.y, v.z);
     }
-    // const yInvVertices = vertices;
+
     const mVertices = model(vertices, geometry);
 
     // const vVertices = view(
@@ -578,14 +625,61 @@ function draw() {
           //手前にあるのでデプスを更新
           depthBuffer[x][y] = z;
 
-          const color32 =
-            (color.alpha << 24) | // alpha
-            (color.blue << 16) | // blue
-            (color.green << 8) | // green
-            color.red; // red
-
-          data[y * CanvasWidth + x] = color32;
+          data[y * CanvasWidth + x] = color.toColor32();
         }
+      }
+    }
+  }
+
+  function getCanvasPixelColor(uv) {
+    x = parseInt(clamp(uv.x, 0, CanvasWidth));
+    y = parseInt(clamp(uv.y, 0, CanvasHeight));
+
+    const color32 = data[y * CanvasWidth + x];
+
+    const alpha = (color32 >> 24) & 0xff;
+    const blue = (color32 >> 16) & 0xff;
+    const green = (color32 >> 8) & 0xff;
+    const red = color32 & 0xff;
+
+    return new Color(red, green, blue, alpha);
+  }
+
+  if (anti) {
+    function RGBToLuminance(c) {
+      const x = new Vector3(c.red, c.green, c.blue);
+      return x.dot(new Vector3(0.2126729, 0.7151522, 0.072175)) / 255;
+    }
+
+    function Sample(uv) {
+      return getCanvasPixelColor(uv);
+    }
+
+    function SampleLuminance(uv, uOffset, vOffset) {
+      return RGBToLuminance(
+        Sample(new Vector2(uv.x + uOffset, uv.y + vOffset))
+      );
+    }
+
+    for (let y = 0; y < CanvasHeight; y++) {
+      for (let x = 0; x < CanvasWidth; x++) {
+        const uv = new Vector2(x, y);
+
+        const m = SampleLuminance(uv, 0, 0);
+        const n = SampleLuminance(uv, 0, 1);
+        const e = SampleLuminance(uv, 1, 0);
+        const s = SampleLuminance(uv, 0, -1);
+        const w = SampleLuminance(uv, -1, 0);
+        const highest = Math.max(Math.max(Math.max(Math.max(n, e), s), w), m);
+        const lowest = Math.min(Math.min(Math.min(Math.min(n, e), s), w), m);
+        const contrast = highest - lowest;
+
+        data[y * CanvasWidth + x] = new Color(
+          contrast * 255,
+          contrast * 255,
+          contrast * 255,
+          255
+        ).toColor32();
       }
     }
   }

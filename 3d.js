@@ -1,10 +1,10 @@
+import { Color } from "./src/color.js";
+import { Geometry } from "./src/geometry.js";
 import { Mathf } from "./src/math.js";
+import { Texture } from "./src/texture.js";
 import { Vector2 } from "./src/vector2.js";
 import { Vector3 } from "./src/vector3.js";
 import { Vector4 } from "./src/vector4.js";
-import { Color } from "./src/color.js";
-import { Texture } from "./src/texture.js";
-import { Geometry } from "./src/geometry.js";
 
 // class Camera {
 //   constructor(viewableAngle, nearClip, farClip) {
@@ -131,7 +131,8 @@ let cube = new Geometry(
 function dissolve(uv) {
   const color = mainTexture.getPixelColor(uv);
   const mask = maskTexture.getPixelColor(uv);
-  const gray = (mask.red / 255) * 0.2 + (mask.green / 255) * 0.7 + (mask.blue / 255) * 0.1;
+  const gray =
+    (mask.red / 255) * 0.2 + (mask.green / 255) * 0.7 + (mask.blue / 255) * 0.1;
 
   if (gray < threshold) {
     return color;
@@ -282,6 +283,7 @@ function draw() {
       //真横と裏は描画しない
       if (d <= 0) continue;
 
+      //特定のジオメトリだけ頂点に番号を表示する
       if (i == 0) {
         for (let j = 0; j < 3; j++) {
           after.push([tri[j], pVertices[tri[j]].x, pVertices[tri[j]].y]);
@@ -317,7 +319,7 @@ function draw() {
           vs[p].x,
           vs[p + 1].x,
           vs[p].x +
-          ((y - vs[p].y) * (vs[p + 1].x - vs[p].x)) / (vs[p + 1].y - vs[p].y)
+            ((y - vs[p].y) * (vs[p + 1].x - vs[p].x)) / (vs[p + 1].y - vs[p].y)
         );
         const z1 =
           vs[p].z +
@@ -393,15 +395,15 @@ function draw() {
           //手前にあるのでデプスを更新
           depthBuffer[x][y] = z;
 
-          data[y * CanvasWidth + x] = color.toColor32();
+          data[y * CanvasWidth + x] = shadedColor(color, kl).toColor32();
         }
       }
     }
   }
 
   function getCanvasPixelColor(uv) {
-    const x = parseInt(Mathf.clamp(uv.x, 0, CanvasWidth));
-    const y = parseInt(Mathf.clamp(uv.y, 0, CanvasHeight));
+    const x = parseInt(parseInt(uv.x) % CanvasWidth);
+    const y = parseInt(parseInt(uv.y) % CanvasHeight);
 
     const color32 = data[y * CanvasWidth + x];
 
@@ -415,8 +417,8 @@ function draw() {
 
   if (anti) {
     function RGBToLuminance(c) {
-      const x = new Vector3(c.red, c.green, c.blue);
-      return x.dot(new Vector3(0.2126729, 0.7151522, 0.072175)) / 255;
+      const x = new Vector3(c.red / 255, c.green / 255, c.blue / 255);
+      return x.dot(new Vector3(0.299, 0.587, 0.114));
     }
 
     function Sample(uv) {
@@ -438,14 +440,14 @@ function draw() {
         const e = SampleLuminance(uv, 1, 0);
         const s = SampleLuminance(uv, 0, -1);
         const w = SampleLuminance(uv, -1, 0);
-        const highest = Math.max(Math.max(Math.max(Math.max(n, e), s), w), m);
-        const lowest = Math.min(Math.min(Math.min(Math.min(n, e), s), w), m);
+        const highest = Math.max(n, e, s, w, m);
+        const lowest = Math.min(n, e, s, w, m);
         const contrast = highest - lowest;
 
         data[y * CanvasWidth + x] = new Color(
-          contrast * 255,
-          contrast * 255,
-          contrast * 255,
+          parseInt(contrast * 255),
+          parseInt(contrast * 255),
+          parseInt(contrast * 255),
           255
         ).toColor32();
       }
@@ -547,7 +549,7 @@ function lightDirectness(normal) {
   n = n.z > 0 ? n : n.multiply(-1);
 
   //光が三角形に真っすぐに当たっている割合
-  return Mathf.clamp(0, 1, DirectionalLight.dot(n));
+  return Mathf.clamp(DirectionalLight.dot(n), 0, 1);
 }
 
 export function updateValue(sliderId) {

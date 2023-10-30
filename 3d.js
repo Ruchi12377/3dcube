@@ -397,9 +397,6 @@ function draw() {
           // const kl = lightDirectness(normal);
           const kl = 1;
 
-          // let u = u1 + (x - x1) * ku;
-          // let v = v1 + (x - x1) * kv;
-
           let u = x2 == x1 ? u1 : u1 + ((x - x1) * (u2 - u1)) / (x2 - x1);
           let v = x2 == x1 ? v1 : v1 + ((x - x1) * (v2 - v1)) / (x2 - x1);
           let w = x2 == x1 ? w1 : w1 + ((x - x1) * (w2 - w1)) / (x2 - x1);

@@ -1,4 +1,5 @@
 import { Mathf } from "./math.js";
+import { Vector4 } from "./vector4.js";
 
 export class Matrix4x4 {
     //m11 m12 m13 m14
@@ -82,30 +83,40 @@ export class Matrix4x4 {
         return mat;
     }
 
-    multiply(m1) {
+    multiply(m) {
         const matrix = Matrix4x4.identify;
 
-        matrix.m11 = this.m11 * m1.m11 + this.m12 * m1.m21 + this.m13 * m1.m31 + this.m14 * m1.m41;
-        matrix.m21 = this.m21 * m1.m11 + this.m22 * m1.m21 + this.m23 * m1.m31 + this.m24 * m1.m41;
-        matrix.m31 = this.m31 * m1.m11 + this.m32 * m1.m21 + this.m33 * m1.m31 + this.m34 * m1.m41;
-        matrix.m41 = this.m41 * m1.m11 + this.m42 * m1.m21 + this.m43 * m1.m31 + this.m44 * m1.m41;
+        matrix.m11 = this.m11 * m.m11 + this.m12 * m.m21 + this.m13 * m.m31 + this.m14 * m.m41;
+        matrix.m21 = this.m21 * m.m11 + this.m22 * m.m21 + this.m23 * m.m31 + this.m24 * m.m41;
+        matrix.m31 = this.m31 * m.m11 + this.m32 * m.m21 + this.m33 * m.m31 + this.m34 * m.m41;
+        matrix.m41 = this.m41 * m.m11 + this.m42 * m.m21 + this.m43 * m.m31 + this.m44 * m.m41;
 
-        matrix.m12 = this.m11 * m1.m12 + this.m12 * m1.m22 + this.m13 * m1.m32 + this.m14 * m1.m42;
-        matrix.m22 = this.m21 * m1.m12 + this.m22 * m1.m22 + this.m23 * m1.m32 + this.m24 * m1.m42;
-        matrix.m32 = this.m31 * m1.m12 + this.m32 * m1.m22 + this.m33 * m1.m32 + this.m34 * m1.m42;
-        matrix.m42 = this.m41 * m1.m12 + this.m42 * m1.m22 + this.m43 * m1.m32 + this.m44 * m1.m42;
+        matrix.m12 = this.m11 * m.m12 + this.m12 * m.m22 + this.m13 * m.m32 + this.m14 * m.m42;
+        matrix.m22 = this.m21 * m.m12 + this.m22 * m.m22 + this.m23 * m.m32 + this.m24 * m.m42;
+        matrix.m32 = this.m31 * m.m12 + this.m32 * m.m22 + this.m33 * m.m32 + this.m34 * m.m42;
+        matrix.m42 = this.m41 * m.m12 + this.m42 * m.m22 + this.m43 * m.m32 + this.m44 * m.m42;
 
-        matrix.m13 = this.m11 * m1.m13 + this.m12 * m1.m23 + this.m13 * m1.m33 + this.m14 * m1.m43;
-        matrix.m23 = this.m21 * m1.m13 + this.m22 * m1.m23 + this.m23 * m1.m33 + this.m24 * m1.m43;
-        matrix.m33 = this.m31 * m1.m13 + this.m32 * m1.m23 + this.m33 * m1.m33 + this.m34 * m1.m43;
-        matrix.m43 = this.m41 * m1.m13 + this.m42 * m1.m23 + this.m43 * m1.m33 + this.m44 * m1.m43;
+        matrix.m13 = this.m11 * m.m13 + this.m12 * m.m23 + this.m13 * m.m33 + this.m14 * m.m43;
+        matrix.m23 = this.m21 * m.m13 + this.m22 * m.m23 + this.m23 * m.m33 + this.m24 * m.m43;
+        matrix.m33 = this.m31 * m.m13 + this.m32 * m.m23 + this.m33 * m.m33 + this.m34 * m.m43;
+        matrix.m43 = this.m41 * m.m13 + this.m42 * m.m23 + this.m43 * m.m33 + this.m44 * m.m43;
 
-        matrix.m14 = this.m11 * m1.m14 + this.m12 * m1.m24 + this.m13 * m1.m34 + this.m14 * m1.m44;
-        matrix.m24 = this.m21 * m1.m14 + this.m22 * m1.m24 + this.m23 * m1.m34 + this.m24 * m1.m44;
-        matrix.m34 = this.m31 * m1.m14 + this.m32 * m1.m24 + this.m33 * m1.m34 + this.m34 * m1.m44;
-        matrix.m44 = this.m41 * m1.m14 + this.m42 * m1.m24 + this.m43 * m1.m34 + this.m44 * m1.m44;
+        matrix.m14 = this.m11 * m.m14 + this.m12 * m.m24 + this.m13 * m.m34 + this.m14 * m.m44;
+        matrix.m24 = this.m21 * m.m14 + this.m22 * m.m24 + this.m23 * m.m34 + this.m24 * m.m44;
+        matrix.m34 = this.m31 * m.m14 + this.m32 * m.m24 + this.m33 * m.m34 + this.m34 * m.m44;
+        matrix.m44 = this.m41 * m.m14 + this.m42 * m.m24 + this.m43 * m.m34 + this.m44 * m.m44;
 
         return matrix;
+    }
+
+    multiplyVector(v) {
+        const vector4 = new Vector4(0, 0, 0, 0);
+        vector4.x = v.x * this.m11 + v.y * this.m21 + v.z * this.m31 + v.w * this.m41;
+		vector4.y = v.x * this.m12 + v.y * this.m22 + v.z * this.m32 + v.w * this.m42;
+		vector4.z = v.x * this.m13 + v.y * this.m23 + v.z * this.m33 + v.w * this.m43;
+		vector4.w = v.x * this.m14 + v.y * this.m24 + v.z * this.m34 + v.w * this.m44;
+
+        return vector4;
     }
 
     toString() {

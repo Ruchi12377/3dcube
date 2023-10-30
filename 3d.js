@@ -20,8 +20,8 @@ const CanvasWidth = 600;
 const CanvasHeight = 600;
 const DirectionalLight = new Vector3(0, 0, 1);
 const BackGroundColor = new Color(255, 255, 255, 255);
-const NearClip = 0;
-const FarClip = 400;
+const NearClip = 0.3;
+const FarClip = 20;
 const ViewableAngle = 60;
 
 //アンチエイリアス
@@ -145,18 +145,42 @@ let cube = new Geometry(
   new Vector3(0, 0, 0),
   new Vector3(1, 1, 1),
   [
-    new Vector3(-50, 50, 0),
-    new Vector3(50, -50, 0),
-    new Vector3(-50, -50, 0),
-    new Vector3(50, 50, 0),
+    new Vector3(-0.5, -0.5, 0.5),
+    new Vector3(0.5, -0.5, 0.5),
+    new Vector3(-0.5, 0.5, 0.5),
+    new Vector3(0.5, 0.5, 0.5),
+    new Vector3(-0.5, -0.5, -0.5),
+    new Vector3(0.5, -0.5, -0.5),
+    new Vector3(-0.5, 0.5, -0.5),
+    new Vector3(0.5, 0.5, -0.5),
   ],
   [
-    [0, 1, 2],
-    [0, 3, 1],
+    [1, 7, 3],
+    [1, 5, 7],
+    [0, 6, 4],
+    [0, 2, 6],
+    [0, 4, 1],
+    [1, 4, 5],
+    [2, 3, 6],
+    [3, 7, 6],
+    [0, 1, 3],
+    [0, 3, 2],
+    [4, 7, 5],
+    [4, 6, 7],
   ],
   [
-    [new Vector2(0, 1), new Vector2(1, 0), new Vector2(0, 0)],
-    [new Vector2(0, 1), new Vector2(1, 1), new Vector2(1, 0)],
+    [new Vector2(1, 0), new Vector2(0, 1), new Vector2(1, 1)],
+    [new Vector2(1, 0), new Vector2(0, 0), new Vector2(0, 1)],
+    [new Vector2(0, 0), new Vector2(1, 1), new Vector2(1, 0)],
+    [new Vector2(0, 0), new Vector2(0, 1), new Vector2(1, 1)],
+    [new Vector2(0, 0), new Vector2(0, 1), new Vector2(1, 0)],
+    [new Vector2(1, 0), new Vector2(0, 1), new Vector2(1, 1)],
+    [new Vector2(1, 0), new Vector2(0, 0), new Vector2(1, 1)],
+    [new Vector2(0, 0), new Vector2(0, 1), new Vector2(1, 1)],
+    [new Vector2(1, 0), new Vector2(0, 0), new Vector2(0, 1)],
+    [new Vector2(1, 0), new Vector2(0, 1), new Vector2(1, 1)],
+    [new Vector2(0, 0), new Vector2(1, 1), new Vector2(1, 0)],
+    [new Vector2(0, 0), new Vector2(0, 1), new Vector2(1, 1)],
   ],
   dissolve,
   new Color(0, 127, 255, 255)
@@ -259,14 +283,14 @@ function draw() {
     //   CanvasWidth,
     //   CanvasHeight
     // );
-    const pVertices = project(mVertices, CanvasWidth, CanvasHeight);
+    const pVertices = project(mVertices);
     //各面の描画
     for (let index = 0; index < geometry.triangles.length; index++) {
       const tri = geometry.triangles[index];
 
-      const p1 = vertices[tri[0]];
-      const p2 = vertices[tri[1]];
-      const p3 = vertices[tri[2]];
+      const p1 = mVertices[tri[0]];
+      const p2 = mVertices[tri[1]];
+      const p3 = mVertices[tri[2]];
 
       const v1 = p2.copy();
       v1.minus(p1);
@@ -359,9 +383,12 @@ function draw() {
         //それ以外は
         //z1 + (x - x1) * kzなので
         const kz = x1 == x2 ? 0 : (z2 - z1) / (x2 - x1);
-        const countX = Math.ceil(Math.max(x1, x2));
 
-        for (let x = parseInt(Math.floor(Math.min(x1, x2))); x < countX; x++) {
+        for (
+          let x = parseInt(Math.floor(Math.min(x1, x2)));
+          x < Math.ceil(Math.max(x1, x2));
+          x++
+        ) {
           //x2 == x1のときは0で割ることになるので
           const z = z1 + (x - x1) * kz;
           if (z < NearClip || z > FarClip) continue;
@@ -372,7 +399,8 @@ function draw() {
           }
 
           //lightに関しての定数kなのでkl
-          const kl = lightDirectness(normal);
+          // const kl = lightDirectness(normal);
+          const kl = 1;
 
           // let u = u1 + (x - x1) * ku;
           // let v = v1 + (x - x1) * kv;
@@ -417,7 +445,7 @@ function draw() {
 
   if (anti) {
     function RGBToLuminance(c) {
-      const x = new Vector3(c.red / 255, c.green / 255, c.blue / 255);
+      const x = c.toLinear();
       return x.dot(new Vector3(0.299, 0.587, 0.114));
     }
 
@@ -450,6 +478,13 @@ function draw() {
           parseInt(contrast * 255),
           255
         ).toColor32();
+
+        // data[y * CanvasWidth + x] = new Color(
+        //   parseInt(contrast * 255),
+        //   parseInt(contrast * 255),
+        //   parseInt(contrast * 255),
+        //   255
+        // ).toColor32();
       }
     }
   }
@@ -482,8 +517,10 @@ function model(vertices, geometry) {
   const cosZ = Math.cos(Mathf.toDeg(-geometry.rot.z));
   const sinZ = Math.sin(Mathf.toDeg(-geometry.rot.z));
 
+  const newVertices = new Array(vertices.length);
+
   //頂点の回転、拡大縮小、平行移動
-  for (let index = vertices.length - 1; index > -1; --index) {
+  for (let index = 0; index < vertices.length; index++) {
     let v = vertices[index];
     //拡大縮小
     v.scale(geometry.scale);
@@ -497,10 +534,10 @@ function model(vertices, geometry) {
     //平行移動
     //yだけ逆になってる
     v.add(new Vector3(geometry.pos.x, -geometry.pos.y, geometry.pos.z));
-    vertices[index] = v;
+    newVertices[index] = v;
   }
 
-  return vertices;
+  return newVertices;
 }
 
 /*
@@ -521,7 +558,7 @@ function view(vertices, near, far, width, height) {
 }*/
 
 //透視投影変換を用いて3次元の頂点を2次元の画面に変換する
-function project(vertices, width, height) {
+function project(vertices) {
   const projectedVertices = new Array(vertices.length);
 
   for (let i = 0; i < vertices.length; i++) {
@@ -530,8 +567,8 @@ function project(vertices, width, height) {
     const q = FarClip / (FarClip - NearClip);
     //カメラの視野
     const f = 1 / Math.tan(Mathf.toDeg(ViewableAngle / 2));
-    const x = (a * f * p.x) / p.z + width / 2;
-    const y = (a * f * p.y) / p.z + height / 2;
+    const x = (a * f * p.x) / p.z + CanvasWidth / 2;
+    const y = (a * f * p.y) / p.z + CanvasHeight / 2;
     const z = p.z * q - NearClip * q;
     const w = p.z;
 

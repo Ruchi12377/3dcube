@@ -2,7 +2,6 @@
 
 <head>
     <meta charset="utf-8">
-    <script src='./lib/big.js'></script>
     <script src="./3d.js" type="module"></script>
 </head>
 
@@ -26,7 +25,7 @@
             <p>Selected value: <span id="posYValue">0</span></p>
 
             <label for="posZ">PosZ:</label>
-            <input type="range" id="posZ" min="0" max="800" value="300" step="1" oninput="updateValue('posZ')">
+            <input type="range" id="posZ" min="-100" max="800" value="300" step="1" oninput="updateValue('posZ')">
             <p>Selected value: <span id="posZValue">0</span></p>
         </div>
         <div>

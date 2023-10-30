@@ -1,6 +1,7 @@
 import { Color } from "./src/color.js";
 import { Geometry } from "./src/geometry.js";
 import { Mathf } from "./src/math.js";
+import { Matrix4x4 } from "./src/matrix4x4.js";
 import { Texture } from "./src/texture.js";
 import { Vector2 } from "./src/vector2.js";
 import { Vector3 } from "./src/vector3.js";
@@ -457,32 +458,19 @@ function draw() {
 }
 
 function model(vertices, geometry) {
-  //回転
-  const cosX = Math.cos(Mathf.toDeg(-geometry.rot.x));
-  const sinX = Math.sin(Mathf.toDeg(-geometry.rot.x));
-  const cosY = Math.cos(Mathf.toDeg(geometry.rot.y));
-  const sinY = Math.sin(Mathf.toDeg(geometry.rot.y));
-  const cosZ = Math.cos(Mathf.toDeg(-geometry.rot.z));
-  const sinZ = Math.sin(Mathf.toDeg(-geometry.rot.z));
+  let mat = Matrix4x4.identify;
+  const pos = geometry.pos;
+  const posYInv = new Vector3(pos.x, -pos.y, pos.z);
+  mat.setTRS(posYInv, geometry.rot, geometry.scale);
 
   const newVertices = new Array(vertices.length);
 
-  //頂点の回転、拡大縮小、平行移動
+  //拡大縮小、頂点の回転、平行移動
   for (let index = 0; index < vertices.length; index++) {
-    let v = vertices[index];
-    //拡大縮小
-    v.scale(geometry.scale);
-    //ZXYの回転のほうが都合が良い
-    //Z軸回転
-    v = new Vector3(v.x * cosZ - v.y * sinZ, v.x * sinZ + v.y * cosZ, v.z);
-    //X軸回転
-    v = new Vector3(v.x, v.y * cosX - v.z * sinX, v.y * sinX + v.z * cosX);
-    //Y軸回転
-    v = new Vector3(v.z * sinY + v.x * cosY, v.y, v.z * cosY - v.x * sinY);
-    //平行移動
-    //yだけ逆になってる
-    v.add(new Vector3(geometry.pos.x, -geometry.pos.y, geometry.pos.z));
-    newVertices[index] = v;
+    const v = vertices[index];
+    const m = mat.multiplyVector(new Vector4(v.x, v.y, v.z, 1));
+
+    newVertices[index] = new Vector3(m.x, m.y, m.z);
   }
 
   return newVertices;

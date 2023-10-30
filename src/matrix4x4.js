@@ -46,9 +46,9 @@ export class Matrix4x4 {
             0, 0, 0, 1,
         );
 
-        const xRad = Mathf.toRad(r.x);
-        const yRad = Mathf.toRad(r.y);
-        const zRad = Mathf.toRad(r.z);
+        const xRad = Mathf.toDeg(-r.x);
+        const yRad = Mathf.toDeg(r.y);
+        const zRad = Mathf.toDeg(-r.z);
 
         const rMatX = new Matrix4x4(
             1, 0, 0, 0,
@@ -66,21 +66,40 @@ export class Matrix4x4 {
 
         const rMatZ = new Matrix4x4(
             Math.cos(zRad), -Math.sin(zRad), 0, 0,
-            Math.sin(zRad), Math.cos(zRad), 0,
-            0, 1, 0, 0,
+            Math.sin(zRad), Math.cos(zRad), 0, 0,
+            0, 0, 1, 0,
             0, 0, 0, 1
         )
 
         const sMat = new Matrix4x4(
-            s.x, 0, 0, 1,
-            0, s.y, 0, 1,
-            0, 0, s.z, 1,
+            s.x, 0, 0, 0,
+            0, s.y, 0, 0,
+            0, 0, s.z, 0,
             0, 0, 0, 1,
         );
 
-        //拡大、回転、平行の順番でかける
+        //拡大、ZXYの回転、平行の順番でかける
         const mat = tMat.multiply(rMatY.multiply(rMatX.multiply(rMatZ.multiply(sMat))));
-        return mat;
+
+        this.m11 = mat.m11;
+        this.m12 = mat.m12;
+        this.m13 = mat.m13;
+        this.m14 = mat.m14;
+
+        this.m21 = mat.m21;
+        this.m22 = mat.m22;
+        this.m23 = mat.m23;
+        this.m24 = mat.m24;
+
+        this.m31 = mat.m31;
+        this.m32 = mat.m32;
+        this.m33 = mat.m33;
+        this.m34 = mat.m34;
+
+        this.m41 = mat.m41;
+        this.m42 = mat.m42;
+        this.m43 = mat.m43;
+        this.m44 = mat.m44;
     }
 
     multiply(m) {
@@ -110,13 +129,12 @@ export class Matrix4x4 {
     }
 
     multiplyVector(v) {
-        const vector4 = new Vector4(0, 0, 0, 0);
-        vector4.x = v.x * this.m11 + v.y * this.m21 + v.z * this.m31 + v.w * this.m41;
-		vector4.y = v.x * this.m12 + v.y * this.m22 + v.z * this.m32 + v.w * this.m42;
-		vector4.z = v.x * this.m13 + v.y * this.m23 + v.z * this.m33 + v.w * this.m43;
-		vector4.w = v.x * this.m14 + v.y * this.m24 + v.z * this.m34 + v.w * this.m44;
+        const x = v.x * this.m11 + v.y * this.m12 + v.z * this.m13 + v.w * this.m14;
+		const y = v.x * this.m21 + v.y * this.m22 + v.z * this.m23 + v.w * this.m24;
+		const z = v.x * this.m31 + v.y * this.m32 + v.z * this.m33 + v.w * this.m34;
+		const w = v.x * this.m41 + v.y * this.m42 + v.z * this.m43 + v.w * this.m44;
 
-        return vector4;
+        return new Vector4(x, y, z, w);
     }
 
     toString() {

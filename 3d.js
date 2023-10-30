@@ -1,110 +1,10 @@
-class Vector2 {
-  constructor(x, y) {
-    this.x = x;
-    this.y = y;
-  }
-
-  copy() {
-    return new Vector2(this.x, this.y);
-  }
-
-  division(n) {
-    this.x /= n;
-    this.y /= n;
-  }
-}
-
-class Vector3 {
-  constructor(x, y, z) {
-    this.x = x;
-    this.y = y;
-    this.z = z;
-  }
-
-  copy() {
-    return new Vector3(this.x, this.y, this.z);
-  }
-
-  add(v) {
-    this.x += v.x;
-    this.y += v.y;
-    this.z += v.z;
-  }
-
-  minus(v) {
-    this.x -= v.x;
-    this.y -= v.y;
-    this.z -= v.z;
-  }
-
-  multiply(n) {
-    this.x *= n;
-    this.y *= n;
-    this.z *= n;
-  }
-
-  division(n) {
-    this.x /= n;
-    this.y /= n;
-    this.z /= n;
-  }
-
-  scale(v) {
-    this.x *= v.x;
-    this.y *= v.y;
-    this.z *= v.z;
-  }
-
-  //外積
-  cross(v) {
-    return new Vector3(
-      this.y * v.z - this.z * v.y,
-      this.z * v.x - this.x * v.z,
-      this.x * v.y - this.y * v.x
-    );
-  }
-
-  //内積
-  dot(v) {
-    return this.x * v.x + this.y * v.y + this.z * v.z;
-  }
-
-  normalize() {
-    length = Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
-    this.division(length);
-  }
-}
-
-class Vector4 {
-  constructor(x, y, z, w) {
-    this.x = x;
-    this.y = y;
-    this.z = z;
-    this.w = w;
-  }
-
-  copy() {
-    return new Vector3(this.x, this.y, this.z, this.w);
-  }
-}
-
-class Color {
-  constructor(red, green, blue, alpha) {
-    this.red = clamp(red, 0, 255);
-    this.green = clamp(green, 0, 255);
-    this.blue = clamp(blue, 0, 255);
-    this.alpha = clamp(alpha, 0, 255);
-  }
-
-  toColorCode() {
-    return (
-      "#" +
-      ((1 << 24) | (this.red << 16) | (this.green << 8) | this.blue)
-        .toString(16)
-        .slice(1)
-    );
-  }
-}
+import { Color } from "./src/color.js";
+import { Geometry } from "./src/geometry.js";
+import { Mathf } from "./src/math.js";
+import { Texture } from "./src/texture.js";
+import { Vector2 } from "./src/vector2.js";
+import { Vector3 } from "./src/vector3.js";
+import { Vector4 } from "./src/vector4.js";
 
 // class Camera {
 //   constructor(viewableAngle, nearClip, farClip) {
@@ -114,93 +14,14 @@ class Color {
 //   }
 // }
 
-class Texture {
-  constructor(width, height) {
-    this.width = width;
-    this.height = height;
-    this.canvas = document.createElement("canvas");
-    this.canvas.width = this.width;
-    this.canvas.height = this.height;
-    this.drawingContext = this.canvas.getContext("2d");
-    this.imageData = null;
-  }
-
-  loadTexture(src, loaded) {
-    let img = new Image();
-    img.crossOrigin = `Anonymous`;
-
-    img.src = src;
-    img.onload = () => {
-      this.canvas.width = img.width;
-      this.canvas.height = img.height;
-      this.drawingContext.drawImage(img, 0, 0);
-
-      this.imageData = this.drawingContext.getImageData(
-        0,
-        0,
-        this.canvas.width,
-        this.canvas.height
-      );
-
-      if (loaded) {
-        loaded();
-      }
-    };
-  }
-
-  getPixelColor(uv) {
-    if (this.imageData == null) {
-      return new Color(255, 0, 255, 255);
-    }
-
-    const x = parseInt(uv.x * (this.width - 1));
-    const y = parseInt(uv.y * (this.height - 1));
-
-    const index = (y * this.width + x) * 4;
-    const red = this.imageData.data[index];
-    const green = this.imageData.data[index + 1];
-    const blue = this.imageData.data[index + 2];
-    const alpha = this.imageData.data[index + 3];
-
-    const color = new Color(red, green, blue, alpha);
-
-    return color;
-  }
-}
-
-class Geometry {
-  constructor(pos, rot, scale, vertices, triangles, uvs, pixelShader, color) {
-    this.pos = pos;
-    this.rot = rot;
-    this.scale = scale;
-
-    this.vertices = vertices;
-    this.triangles = triangles;
-    this.uvs = uvs;
-    this.pixelShader = pixelShader;
-
-    this.color = color;
-  }
-
-  copiedVertices() {
-    const length = this.vertices.length;
-    const newVertices = new Array(length);
-    for (let i = 0; i < length; i++) {
-      newVertices[i] = this.vertices[i].copy();
-    }
-
-    return newVertices;
-  }
-}
-
 //定数宣言
 const FrameRate = 60;
 const CanvasWidth = 600;
 const CanvasHeight = 600;
 const DirectionalLight = new Vector3(0, 0, 1);
 const BackGroundColor = new Color(255, 255, 255, 255);
-const NearClip = 0;
-const FarClip = 400;
+const NearClip = 0.3;
+const FarClip = 20;
 const ViewableAngle = 60;
 
 //必要な変数たち
@@ -214,11 +35,11 @@ const Alpha = new Color(0, 0, 0, 255);
 
 //描画したい者たち
 const size = 100;
-let mainTexture = new Texture(256, 256);
-mainTexture.loadTexture("./sample.png");
+let mainTexture = new Texture(512, 512);
+mainTexture.loadTexture("./images/texture.png");
 
 let maskTexture = new Texture(32, 32);
-maskTexture.loadTexture("./noiseTexture.png");
+maskTexture.loadTexture("./images/noiseTexture.png");
 
 let threshold = 0.8;
 
@@ -301,13 +122,9 @@ let cube = new Geometry(
   (color = new Color(0, 127, 255, 255))
 );*/
 
-function tex2d(texture, uv) {
-  return texture.getPixelColor(uv);
-}
-
 function dissolve(uv) {
-  const color = tex2d(mainTexture, uv);
-  const mask = tex2d(maskTexture, uv);
+  const color = mainTexture.getPixelColor(uv);
+  const mask = maskTexture.getPixelColor(uv);
   const gray =
     (mask.red / 255) * 0.2 + (mask.green / 255) * 0.7 + (mask.blue / 255) * 0.1;
 
@@ -318,25 +135,49 @@ function dissolve(uv) {
 }
 
 let cube = new Geometry(
-  new Vector3(0, 0, 0),
+  new Vector3(0, 0, 100),
   new Vector3(0, 0, 0),
   new Vector3(1, 1, 1),
   [
-    new Vector3(-50, 50, 0),
-    new Vector3(50, -50, 0),
-    new Vector3(-50, -50, 0),
-    new Vector3(50, 50, 0),
+    new Vector3(-0.5, -0.5, 0.5),
+    new Vector3(0.5, -0.5, 0.5),
+    new Vector3(-0.5, 0.5, 0.5),
+    new Vector3(0.5, 0.5, 0.5),
+    new Vector3(-0.5, -0.5, -0.5),
+    new Vector3(0.5, -0.5, -0.5),
+    new Vector3(-0.5, 0.5, -0.5),
+    new Vector3(0.5, 0.5, -0.5),
   ],
   [
-    [0, 1, 2],
-    [0, 3, 1],
+    [1, 7, 3],
+    [1, 5, 7],
+    [0, 6, 4],
+    [0, 2, 6],
+    [0, 4, 1],
+    [1, 4, 5],
+    [2, 3, 6],
+    [3, 7, 6],
+    [0, 1, 3],
+    [0, 3, 2],
+    [4, 7, 5],
+    [4, 6, 7],
   ],
   [
-    [new Vector2(0, 1), new Vector2(1, 0), new Vector2(0, 0)],
-    [new Vector2(0, 1), new Vector2(1, 1), new Vector2(1, 0)],
+    [new Vector2(1, 0), new Vector2(0, 1), new Vector2(1, 1)],
+    [new Vector2(1, 0), new Vector2(0, 0), new Vector2(0, 1)],
+    [new Vector2(0, 0), new Vector2(1, 1), new Vector2(1, 0)],
+    [new Vector2(0, 0), new Vector2(0, 1), new Vector2(1, 1)],
+    [new Vector2(0, 0), new Vector2(0, 1), new Vector2(1, 0)],
+    [new Vector2(1, 0), new Vector2(0, 1), new Vector2(1, 1)],
+    [new Vector2(1, 0), new Vector2(0, 0), new Vector2(1, 1)],
+    [new Vector2(0, 0), new Vector2(0, 1), new Vector2(1, 1)],
+    [new Vector2(1, 0), new Vector2(0, 0), new Vector2(0, 1)],
+    [new Vector2(1, 0), new Vector2(0, 1), new Vector2(1, 1)],
+    [new Vector2(0, 0), new Vector2(1, 1), new Vector2(1, 0)],
+    [new Vector2(0, 0), new Vector2(0, 1), new Vector2(1, 1)],
   ],
   dissolve,
-  (color = new Color(0, 127, 255, 255))
+  new Color(0, 127, 255, 255)
 );
 
 let cube2 = new Geometry(
@@ -369,25 +210,18 @@ let cube2 = new Geometry(
   ],
   [],
   dissolve,
-  (color = new Color(255, 170, 0, 255))
+  new Color(255, 170, 0, 255)
 );
 
 const geometries = [cube /*, cube2*/];
 
-function toDeg(x) {
-  return (x * Math.PI) / 180;
-}
-
-function clamp(num, min, max) {
-  return Math.min(Math.max(num, min), max);
-}
-
 window.onload = () => {
   const canvas = document.getElementById("canvas");
-  context = canvas.getContext("2d");
-
   canvas.width = CanvasWidth;
   canvas.height = CanvasHeight;
+
+  context = canvas.getContext("2d");
+  context.imageSmoothingEnabled = false;
 
   updateValue("posX");
   updateValue("posY");
@@ -433,7 +267,7 @@ function draw() {
       const v = vertices[j];
       vertices[j] = new Vector3(v.x, -v.y, v.z);
     }
-    // const yInvVertices = vertices;
+
     const mVertices = model(vertices, geometry);
 
     // const vVertices = view(
@@ -443,14 +277,14 @@ function draw() {
     //   CanvasWidth,
     //   CanvasHeight
     // );
-    const pVertices = project(mVertices, CanvasWidth, CanvasHeight);
+    const pVertices = project(mVertices);
     //各面の描画
     for (let index = 0; index < geometry.triangles.length; index++) {
       const tri = geometry.triangles[index];
 
-      const p1 = vertices[tri[0]];
-      const p2 = vertices[tri[1]];
-      const p3 = vertices[tri[2]];
+      const p1 = mVertices[tri[0]];
+      const p2 = mVertices[tri[1]];
+      const p3 = mVertices[tri[2]];
 
       const v1 = p2.copy();
       v1.minus(p1);
@@ -467,6 +301,7 @@ function draw() {
       //真横と裏は描画しない
       if (d <= 0) continue;
 
+      //特定のジオメトリだけ頂点に番号を表示する
       if (i == 0) {
         for (let j = 0; j < 3; j++) {
           after.push([tri[j], pVertices[tri[j]].x, pVertices[tri[j]].y]);
@@ -498,7 +333,7 @@ function draw() {
         if (y < 0 || y >= CanvasHeight) continue;
 
         const p = Math.abs(vs[0].y - vs[1].y) < 0.1 || y >= vs[1].y ? 1 : 0;
-        let x1 = clamp(
+        let x1 = Mathf.clamp(
           vs[p].x,
           vs[p + 1].x,
           vs[p].x +
@@ -508,7 +343,7 @@ function draw() {
           vs[p].z +
           ((y - vs[p].y) * (vs[p + 1].z - vs[p].z)) / (vs[p + 1].y - vs[p].y);
 
-        let x2 = clamp(
+        let x2 = Mathf.clamp(
           vs[0].x,
           vs[2].x,
           vs[0].x + ((y - vs[0].y) * (vs[2].x - vs[0].x)) / (vs[2].y - vs[0].y)
@@ -542,9 +377,12 @@ function draw() {
         //それ以外は
         //z1 + (x - x1) * kzなので
         const kz = x1 == x2 ? 0 : (z2 - z1) / (x2 - x1);
-        const countX = Math.ceil(Math.max(x1, x2));
 
-        for (let x = parseInt(Math.floor(Math.min(x1, x2))); x < countX; x++) {
+        for (
+          let x = parseInt(Math.floor(Math.min(x1, x2)));
+          x < Math.ceil(Math.max(x1, x2));
+          x++
+        ) {
           //x2 == x1のときは0で割ることになるので
           const z = z1 + (x - x1) * kz;
           if (z < NearClip || z > FarClip) continue;
@@ -555,7 +393,8 @@ function draw() {
           }
 
           //lightに関しての定数kなのでkl
-          const kl = lightDirectness(normal);
+          // const kl = lightDirectness(normal);
+          const kl = 1;
 
           // let u = u1 + (x - x1) * ku;
           // let v = v1 + (x - x1) * kv;
@@ -565,8 +404,8 @@ function draw() {
           let w = x2 == x1 ? w1 : w1 + ((x - x1) * (w2 - w1)) / (x2 - x1);
           u /= w;
           v /= w;
-          u = clamp(u, 0, 1); // 計算誤差対策
-          v = 1 - clamp(v, 0, 1);
+          u = Mathf.clamp(u, 0, 1); // 計算誤差対策
+          v = 1 - Mathf.clamp(v, 0, 1);
 
           const color = geometry.pixelShader(new Vector2(u, v));
 
@@ -578,16 +417,24 @@ function draw() {
           //手前にあるのでデプスを更新
           depthBuffer[x][y] = z;
 
-          const color32 =
-            (color.alpha << 24) | // alpha
-            (color.blue << 16) | // blue
-            (color.green << 8) | // green
-            color.red; // red
-
-          data[y * CanvasWidth + x] = color32;
+          data[y * CanvasWidth + x] = shadedColor(color, kl).toColor32();
         }
       }
     }
+  }
+
+  function getCanvasPixelColor(uv) {
+    const x = parseInt(parseInt(uv.x) % CanvasWidth);
+    const y = parseInt(parseInt(uv.y) % CanvasHeight);
+
+    const color32 = data[y * CanvasWidth + x];
+
+    const alpha = (color32 >> 24) & 0xff;
+    const blue = (color32 >> 16) & 0xff;
+    const green = (color32 >> 8) & 0xff;
+    const red = color32 & 0xff;
+
+    return new Color(red, green, blue, alpha);
   }
 
   imageData.data.set(buf8);
@@ -611,16 +458,18 @@ function draw() {
 
 function model(vertices, geometry) {
   //回転
-  const cosX = Math.cos(toDeg(-geometry.rot.x));
-  const sinX = Math.sin(toDeg(-geometry.rot.x));
-  const cosY = Math.cos(toDeg(geometry.rot.y));
-  const sinY = Math.sin(toDeg(geometry.rot.y));
-  const cosZ = Math.cos(toDeg(-geometry.rot.z));
-  const sinZ = Math.sin(toDeg(-geometry.rot.z));
+  const cosX = Math.cos(Mathf.toDeg(-geometry.rot.x));
+  const sinX = Math.sin(Mathf.toDeg(-geometry.rot.x));
+  const cosY = Math.cos(Mathf.toDeg(geometry.rot.y));
+  const sinY = Math.sin(Mathf.toDeg(geometry.rot.y));
+  const cosZ = Math.cos(Mathf.toDeg(-geometry.rot.z));
+  const sinZ = Math.sin(Mathf.toDeg(-geometry.rot.z));
+
+  const newVertices = new Array(vertices.length);
 
   //頂点の回転、拡大縮小、平行移動
-  for (let index = vertices.length - 1; index > -1; --index) {
-    v = vertices[index];
+  for (let index = 0; index < vertices.length; index++) {
+    let v = vertices[index];
     //拡大縮小
     v.scale(geometry.scale);
     //ZXYの回転のほうが都合が良い
@@ -633,10 +482,10 @@ function model(vertices, geometry) {
     //平行移動
     //yだけ逆になってる
     v.add(new Vector3(geometry.pos.x, -geometry.pos.y, geometry.pos.z));
-    vertices[index] = v;
+    newVertices[index] = v;
   }
 
-  return vertices;
+  return newVertices;
 }
 
 /*
@@ -657,7 +506,7 @@ function view(vertices, near, far, width, height) {
 }*/
 
 //透視投影変換を用いて3次元の頂点を2次元の画面に変換する
-function project(vertices, width, height) {
+function project(vertices) {
   const projectedVertices = new Array(vertices.length);
 
   for (let i = 0; i < vertices.length; i++) {
@@ -665,9 +514,9 @@ function project(vertices, width, height) {
     const a = (CanvasWidth > CanvasHeight ? CanvasWidth : CanvasHeight) / 2;
     const q = FarClip / (FarClip - NearClip);
     //カメラの視野
-    const f = 1 / Math.tan(toDeg(ViewableAngle / 2));
-    const x = (a * f * p.x) / p.z + width / 2;
-    const y = (a * f * p.y) / p.z + height / 2;
+    const f = 1 / Math.tan(Mathf.toDeg(ViewableAngle / 2));
+    const x = (a * f * p.x) / p.z + CanvasWidth / 2;
+    const y = (a * f * p.y) / p.z + CanvasHeight / 2;
     const z = p.z * q - NearClip * q;
     const w = p.z;
 
@@ -685,10 +534,10 @@ function lightDirectness(normal) {
   n = n.z > 0 ? n : n.multiply(-1);
 
   //光が三角形に真っすぐに当たっている割合
-  return clamp(0, 1, DirectionalLight.dot(n));
+  return Mathf.clamp(DirectionalLight.dot(n), 0, 1);
 }
 
-function updateValue(sliderId) {
+export function updateValue(sliderId) {
   var slider = document.getElementById(sliderId);
   var output = document.getElementById(
     sliderId.replace(/[^a-zA-Z]/g, "") + "Value"
@@ -728,3 +577,5 @@ function updateValue(sliderId) {
       break;
   }
 }
+
+window.updateValue = updateValue;

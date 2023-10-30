@@ -2,12 +2,18 @@
 
 <head>
     <meta charset="utf-8">
-	<script src="./3d.js"></script>
+    <script src="./3d.js" type="module"></script>
 </head>
 
 <body>
     <div style="display: flex;">
         <canvas id="canvas" style="border: 1px solid;"></canvas>
+        <div>
+            <label for="threshold">Dissolve:</label>
+            <input type="range" id="threshold" min="0" max="1" value="1" step="0.001"
+                oninput="updateValue('threshold')">
+            <p>Selected value: <span id="thresholdValue">1</span></p>
+        </div>
         <div>
             <label for="posX">PosX:</label>
             <input type="range" id="posX" min="-400" max="400" value="0" step="1" oninput="updateValue('posX')">
@@ -18,18 +24,18 @@
             <p>Selected value: <span id="posYValue">0</span></p>
 
             <label for="posZ">PosZ:</label>
-            <input type="range" id="posZ" min="0" max="800" value="300" step="1" oninput="updateValue('posZ')">
+            <input type="range" id="posZ" min="-100" max="800" value="2" step="1" oninput="updateValue('posZ')">
             <p>Selected value: <span id="posZValue">0</span></p>
         </div>
         <div>
             <label for="rotX">RotX:</label>
             <input type="range" id="rotX" min="-180" max="180" value="45" step="1" oninput="updateValue('rotX')">
             <p>Selected value: <span id="rotXValue">0</span></p>
-            
+
             <label for="rotY">RotY:</label>
             <input type="range" id="rotY" min="-180" max="180" value="45" step="1" oninput="updateValue('rotY')">
             <p>Selected value: <span id="rotYValue">0</span></p>
-            
+
             <label for="rotZ">RotZ:</label>
             <input type="range" id="rotZ" min="-180" max="180" value="45" step="1" oninput="updateValue('rotZ')">
             <p>Selected value: <span id="rotZValue">0</span></p>
@@ -47,12 +53,7 @@
             <input type="range" id="scaleZ" min="0.1" max="2" value="1" step="0.1" oninput="updateValue('scaleZ')">
             <p>Selected value: <span id="scaleZValue">1</span></p>
         </div>
-        <div>
-            <label for="threshold">Dissolve:</label>
-            <input type="range" id="threshold" min="0" max="1" value="1" step="0.1" oninput="updateValue('threshold')">
-            <p>Selected value: <span id="thresholdValue">1</span></p>
-        </div>
-        <img width="200px" height="200px" src="./dir.png">
+        <img width="200px" height="200px" src="./images/dir.png">
     </div>
     <canvas id="myCanvas"> </canvas>
 </body>

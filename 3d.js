@@ -24,12 +24,6 @@ const NearClip = 0.3;
 const FarClip = 20;
 const ViewableAngle = 60;
 
-//アンチエイリアス
-export function swap() {
-  anti = anti == false;
-}
-let anti = true;
-
 //必要な変数たち
 let context;
 
@@ -443,52 +437,6 @@ function draw() {
     return new Color(red, green, blue, alpha);
   }
 
-  if (anti) {
-    function RGBToLuminance(c) {
-      const x = c.toLinear();
-      return x.dot(new Vector3(0.299, 0.587, 0.114));
-    }
-
-    function Sample(uv) {
-      return getCanvasPixelColor(uv);
-    }
-
-    function SampleLuminance(uv, uOffset, vOffset) {
-      return RGBToLuminance(
-        Sample(new Vector2(uv.x + uOffset, uv.y + vOffset))
-      );
-    }
-
-    for (let y = 0; y < CanvasHeight; y++) {
-      for (let x = 0; x < CanvasWidth; x++) {
-        const uv = new Vector2(x, y);
-
-        const m = SampleLuminance(uv, 0, 0);
-        const n = SampleLuminance(uv, 0, 1);
-        const e = SampleLuminance(uv, 1, 0);
-        const s = SampleLuminance(uv, 0, -1);
-        const w = SampleLuminance(uv, -1, 0);
-        const highest = Math.max(n, e, s, w, m);
-        const lowest = Math.min(n, e, s, w, m);
-        const contrast = highest - lowest;
-
-        data[y * CanvasWidth + x] = new Color(
-          parseInt(contrast * 255),
-          parseInt(contrast * 255),
-          parseInt(contrast * 255),
-          255
-        ).toColor32();
-
-        // data[y * CanvasWidth + x] = new Color(
-        //   parseInt(contrast * 255),
-        //   parseInt(contrast * 255),
-        //   parseInt(contrast * 255),
-        //   255
-        // ).toColor32();
-      }
-    }
-  }
-
   imageData.data.set(buf8);
   context.putImageData(imageData, 0, 0);
 
@@ -630,5 +578,4 @@ export function updateValue(sliderId) {
   }
 }
 
-window.swap = swap;
 window.updateValue = updateValue;

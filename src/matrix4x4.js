@@ -37,7 +37,7 @@ export class Matrix4x4 {
         )
     }
 
-    SetTRS(t, r, s) {
+    setTRS(t, r, s) {
         const tMat = new Matrix4x4(
             1, 0, 0, t.x,
             0, 1, 0, t.y,

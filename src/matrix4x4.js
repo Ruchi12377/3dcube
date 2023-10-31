@@ -55,21 +55,21 @@ export class Matrix4x4 {
             0, Math.cos(xRad), -Math.sin(xRad), 0,
             0, Math.sin(xRad), Math.cos(xRad), 0,
             0, 0, 0, 1
-        )
+        );
 
         const rMatY = new Matrix4x4(
             Math.cos(yRad), 0, Math.sin(yRad), 0,
             0, 1, 0, 0,
             -Math.sin(yRad), 0, Math.cos(yRad), 0,
             0, 0, 0, 1
-        )
+        );
 
         const rMatZ = new Matrix4x4(
             Math.cos(zRad), -Math.sin(zRad), 0, 0,
             Math.sin(zRad), Math.cos(zRad), 0, 0,
             0, 0, 1, 0,
             0, 0, 0, 1
-        )
+        );
 
         const sMat = new Matrix4x4(
             s.x, 0, 0, 0,

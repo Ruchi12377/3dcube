@@ -7,7 +7,14 @@ export class Vector4 {
   }
 
   copy() {
-    return new Vector3(this.x, this.y, this.z, this.w);
+    return new Vector4(this.x, this.y, this.z, this.w);
+  }
+
+  division(n) {
+    this.x /= n;
+    this.y /= n;
+    this.z /= n;
+    this.w /= n;
   }
 
   sqrtMagnitude() {

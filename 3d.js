@@ -238,9 +238,6 @@ function draw() {
 
   let depthBuffer = JSON.parse(JSON.stringify(depthEmpty));
 
-  context.fillStyle = BackGroundColor.toColorCode();
-  context.fillRect(0, 0, CanvasWidth, CanvasHeight);
-
   const after = new Array();
 
   for (let i = 0; i < geometries.length; i++) {
@@ -321,7 +318,7 @@ function draw() {
           vs[p].x,
           vs[p + 1].x,
           vs[p].x +
-            ((y - vs[p].y) * (vs[p + 1].x - vs[p].x)) / (vs[p + 1].y - vs[p].y)
+          ((y - vs[p].y) * (vs[p + 1].x - vs[p].x)) / (vs[p + 1].y - vs[p].y)
         );
         const z1 =
           vs[p].z +
@@ -442,35 +439,18 @@ function model(vertices, geometry) {
   const posYInv = new Vector3(pos.x, -pos.y, pos.z);
   mat.setTRS(posYInv, geometry.rot, geometry.scale);
 
-  const newVertices = new Array(vertices.length);
+  const modeledVertices = new Array(vertices.length);
 
   //拡大縮小、頂点の回転、平行移動
   for (let index = 0; index < vertices.length; index++) {
     const v = vertices[index];
     const m = mat.multiplyVector(new Vector4(v.x, v.y, v.z, 1));
 
-    newVertices[index] = new Vector3(m.x, m.y, m.z);
+    modeledVertices[index] = new Vector3(m.x, m.y, m.z);
   }
 
-  return newVertices;
+  return modeledVertices;
 }
-
-/*
-function view(vertices, near, far, width, height) {
-  const viewedVertices = new Array(vertices.length);
-
-  for (let i = 0; i < vertices.length; i++) {
-    const p = vertices[i];
-    const x = ((2 * near) / width) * p.x;
-    const y = ((2 * near) / height) * p.y;
-    const z =
-      (-(far + near) / (far - near)) * p.z - (2 * near * far) / (far - near);
-    viewedVertices[i] = new Vector3(x, y, z);
-    viewedVertices[i].division(-p.z);
-  }
-
-  return viewedVertices;
-}*/
 
 //透視投影変換を用いて3次元の頂点を2次元の画面に変換する
 function project(vertices) {

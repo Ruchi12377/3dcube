@@ -130,9 +130,9 @@ export class Matrix4x4 {
 
     multiplyVector(v) {
         const x = v.x * this.m11 + v.y * this.m12 + v.z * this.m13 + v.w * this.m14;
-		const y = v.x * this.m21 + v.y * this.m22 + v.z * this.m23 + v.w * this.m24;
-		const z = v.x * this.m31 + v.y * this.m32 + v.z * this.m33 + v.w * this.m34;
-		const w = v.x * this.m41 + v.y * this.m42 + v.z * this.m43 + v.w * this.m44;
+        const y = v.x * this.m21 + v.y * this.m22 + v.z * this.m23 + v.w * this.m24;
+        const z = v.x * this.m31 + v.y * this.m32 + v.z * this.m33 + v.w * this.m34;
+        const w = v.x * this.m41 + v.y * this.m42 + v.z * this.m43 + v.w * this.m44;
 
         return new Vector4(x, y, z, w);
     }

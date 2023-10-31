@@ -29,7 +29,7 @@ export class Matrix4x4 {
         this.m44 = m44;
     }
 
-    static get identify() {
+    static get identity() {
         return new Matrix4x4(
             1, 0, 0, 0,
             0, 1, 0, 0,
@@ -46,9 +46,9 @@ export class Matrix4x4 {
             0, 0, 0, 1,
         );
 
-        const xRad = Mathf.toDeg(-r.x);
-        const yRad = Mathf.toDeg(r.y);
-        const zRad = Mathf.toDeg(-r.z);
+        const xRad = Mathf.toRad(-r.x);
+        const yRad = Mathf.toRad(r.y);
+        const zRad = Mathf.toRad(-r.z);
 
         const rMatX = new Matrix4x4(
             1, 0, 0, 0,
@@ -103,7 +103,7 @@ export class Matrix4x4 {
     }
 
     multiply(m) {
-        const matrix = Matrix4x4.identify;
+        const matrix = Matrix4x4.identity;
 
         matrix.m11 = this.m11 * m.m11 + this.m12 * m.m21 + this.m13 * m.m31 + this.m14 * m.m41;
         matrix.m21 = this.m21 * m.m11 + this.m22 * m.m21 + this.m23 * m.m31 + this.m24 * m.m41;

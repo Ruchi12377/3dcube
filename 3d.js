@@ -434,7 +434,7 @@ function draw() {
 }
 
 function model(vertices, geometry) {
-  let mat = Matrix4x4.identify;
+  let mat = Matrix4x4.identity;
   const pos = geometry.pos;
   const posYInv = new Vector3(pos.x, -pos.y, pos.z);
   mat.setTRS(posYInv, geometry.rot, geometry.scale);
@@ -456,22 +456,22 @@ function model(vertices, geometry) {
 function project(vertices) {
   const projectedVertices = new Array(vertices.length);
   //カメラの視野
-  const f = 1 / Math.tan(Mathf.toDeg(ViewableAngle / 2));
+  const f = 1 / Math.tan(Mathf.toRad(ViewableAngle / 2));
   const a = (CanvasWidth > CanvasHeight ? CanvasWidth : CanvasHeight) / 2;
   const q = FarClip / (FarClip - NearClip);
 
   for (let i = 0; i < vertices.length; i++) {
     const p = vertices[i];
     //以下の式を行列に直したもの
-    // const f = 1 / Math.tan(Mathf.toDeg(ViewableAngle / 2));
+    // const f = 1 / Math.tan(Mathf.toRad(ViewableAngle / 2));
     // const x = (a * f * p.x) / p.z + CanvasWidth / 2;
     // const y = (a * f * p.y) / p.z + CanvasHeight / 2;
     // const z = p.z * q - NearClip * q;
     // const w = p.z;
     const mat = new Matrix4x4(
-      a * f, 0, CanvasWidth / 2,  0,
-      0, a * f, CanvasHeight / 2, 0, 
-      0, 0, q, -NearClip * q,
+      a * f, 0, CanvasWidth / 2, 0,
+      0, a * f, CanvasHeight / 2, 0,
+      0, 0, q, -NearClip * q, 
       0, 0, 1, 0
     );
 

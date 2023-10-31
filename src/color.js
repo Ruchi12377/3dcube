@@ -31,4 +31,22 @@ export class Color {
 
     return new Vector3(lr, lg, lb);
   }
+
+  shadedColor(intensity) {
+    return new Color(
+      this.red * intensity,
+      this.green * intensity,
+      this.blue * intensity,
+      this.alpha
+    );
+  }
+
+  blendColor(color) {
+    return new Color(
+      (this.red * color.red) / 2,
+      (this.green * color.green) / 2,
+      (this.blue * color.blue) / 2,
+      (this.alpha * color.alpha) / 2
+    );
+  }
 }

@@ -7,14 +7,6 @@ import { Vector2 } from "./src/vector2.js";
 import { Vector3 } from "./src/vector3.js";
 import { Vector4 } from "./src/vector4.js";
 
-// class Camera {
-//   constructor(viewableAngle, nearClip, farClip) {
-//     this.viewableAngle = viewableAngle;
-//     this.nearClip = nearClip;
-//     this.farClip = farClip;
-//   }
-// }
-
 //定数宣言
 const FrameRate = 60;
 const CanvasWidth = 600;
@@ -238,15 +230,6 @@ window.onload = () => {
 
 window.setInterval(draw, 1000 / FrameRate);
 
-function shadedColor(color, intensity) {
-  return new Color(
-    color.red * intensity,
-    color.green * intensity,
-    color.blue * intensity,
-    color.alpha
-  );
-}
-
 function draw() {
   let imageData = context.getImageData(0, 0, CanvasWidth, CanvasHeight);
   let buf = new ArrayBuffer(imageData.data.length);
@@ -394,8 +377,7 @@ function draw() {
           }
 
           //lightに関しての定数kなのでkl
-          // const kl = lightDirectness(normal);
-          const kl = 1;
+          const kl = lightDirectness(normal);
 
           let u = x2 == x1 ? u1 : u1 + ((x - x1) * (u2 - u1)) / (x2 - x1);
           let v = x2 == x1 ? v1 : v1 + ((x - x1) * (v2 - v1)) / (x2 - x1);
@@ -415,7 +397,7 @@ function draw() {
           //手前にあるのでデプスを更新
           depthBuffer[x][y] = z;
 
-          data[y * CanvasWidth + x] = shadedColor(color, kl).toColor32();
+          data[y * CanvasWidth + x] = color.shadedColor(kl).toColor32();
         }
       }
     }

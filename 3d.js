@@ -318,7 +318,7 @@ function draw() {
           vs[p].x,
           vs[p + 1].x,
           vs[p].x +
-          ((y - vs[p].y) * (vs[p + 1].x - vs[p].x)) / (vs[p + 1].y - vs[p].y)
+            ((y - vs[p].y) * (vs[p + 1].x - vs[p].x)) / (vs[p + 1].y - vs[p].y)
         );
         const z1 =
           vs[p].z +
@@ -455,19 +455,30 @@ function model(vertices, geometry) {
 //透視投影変換を用いて3次元の頂点を2次元の画面に変換する
 function project(vertices) {
   const projectedVertices = new Array(vertices.length);
+  //カメラの視野
+  const f = 1 / Math.tan(Mathf.toDeg(ViewableAngle / 2));
+  const a = (CanvasWidth > CanvasHeight ? CanvasWidth : CanvasHeight) / 2;
+  const q = FarClip / (FarClip - NearClip);
 
   for (let i = 0; i < vertices.length; i++) {
     const p = vertices[i];
-    const a = (CanvasWidth > CanvasHeight ? CanvasWidth : CanvasHeight) / 2;
-    const q = FarClip / (FarClip - NearClip);
-    //カメラの視野
-    const f = 1 / Math.tan(Mathf.toDeg(ViewableAngle / 2));
-    const x = (a * f * p.x) / p.z + CanvasWidth / 2;
-    const y = (a * f * p.y) / p.z + CanvasHeight / 2;
-    const z = p.z * q - NearClip * q;
-    const w = p.z;
+    //以下の式を行列に直したもの
+    // const f = 1 / Math.tan(Mathf.toDeg(ViewableAngle / 2));
+    // const x = (a * f * p.x) / p.z + CanvasWidth / 2;
+    // const y = (a * f * p.y) / p.z + CanvasHeight / 2;
+    // const z = p.z * q - NearClip * q;
+    // const w = p.z;
+    const mat = new Matrix4x4(
+      a * f, 0, CanvasWidth / 2,  0,
+      0, a * f, CanvasHeight / 2, 0, 
+      0, 0, q, -NearClip * q,
+      0, 0, 1, 0
+    );
 
-    projectedVertices[i] = new Vector4(x, y, z, w);
+    const p4 = mat.multiplyVector(new Vector4(p.x, p.y, p.z, 1));
+    p4.x /= p4.w;
+    p4.y /= p4.w;
+    projectedVertices[i] = p4;
   }
 
   return projectedVertices;

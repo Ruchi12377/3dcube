@@ -1,3 +1,4 @@
+import { Camera } from "./src/camera.js";
 import { Color } from "./src/color.js";
 import { Geometry } from "./src/geometry.js";
 import { Mathf } from "./src/math.js";
@@ -12,10 +13,15 @@ const FrameRate = 60;
 const CanvasWidth = 600;
 const CanvasHeight = 600;
 const DirectionalLight = new Vector3(0, 0, 1);
-const BackGroundColor = new Color(255, 255, 255, 255);
-const NearClip = 0.3;
-const FarClip = 20;
-const ViewableAngle = 60;
+const CameraControlSensitively = 35;
+
+const camera = new Camera(
+  60,
+  0.3,
+  20,
+  new Vector3(0, 0, 0),
+  new Vector3(0, 0, 0)
+);
 
 //必要な変数たち
 let context;
@@ -128,7 +134,7 @@ function dissolve(uv) {
 }
 
 let cube = new Geometry(
-  new Vector3(0, 0, 100),
+  new Vector3(0, 0, 2),
   new Vector3(0, 0, 0),
   new Vector3(1, 1, 1),
   [
@@ -250,22 +256,15 @@ function draw() {
     }
 
     const mVertices = model(vertices, geometry);
-
-    // const vVertices = view(
-    //   vertices,
-    //   NearClip,
-    //   FarClip,
-    //   CanvasWidth,
-    //   CanvasHeight
-    // );
-    const pVertices = project(mVertices);
+    const vVertices = view(mVertices, camera.pos, camera.rot);
+    const pVertices = project(vVertices);
     //各面の描画
     for (let index = 0; index < geometry.triangles.length; index++) {
       const tri = geometry.triangles[index];
 
-      const p1 = mVertices[tri[0]];
-      const p2 = mVertices[tri[1]];
-      const p3 = mVertices[tri[2]];
+      const p1 = vVertices[tri[0]];
+      const p2 = vVertices[tri[1]];
+      const p3 = vVertices[tri[2]];
 
       const v1 = p2.copy();
       v1.minus(p1);
@@ -281,6 +280,9 @@ function draw() {
       //d = 0 横
       //真横と裏は描画しない
       if (d <= 0) continue;
+
+      //lightに関しての定数kなのでkl
+      const kl = lightDirectness(normal);
 
       //特定のジオメトリだけ頂点に番号を表示する
       if (i == 0) {
@@ -366,15 +368,12 @@ function draw() {
         ) {
           //x2 == x1のときは0で割ることになるので
           const z = z1 + (x - x1) * kz;
-          if (z < NearClip || z > FarClip) continue;
+          if (z < camera.nearClip || z > camera.farClip) continue;
 
           //描画しようとしているピクセルが、奥にある場合
           if (x < 0 || x >= CanvasWidth || z > depthBuffer[x][y]) {
             continue;
           }
-
-          //lightに関しての定数kなのでkl
-          const kl = lightDirectness(normal);
 
           let u = x2 == x1 ? u1 : u1 + ((x - x1) * (u2 - u1)) / (x2 - x1);
           let v = x2 == x1 ? v1 : v1 + ((x - x1) * (v2 - v1)) / (x2 - x1);
@@ -438,7 +437,6 @@ function model(vertices, geometry) {
   const pos = geometry.pos;
   const posYInv = new Vector3(pos.x, -pos.y, pos.z);
   mat.setTRS(posYInv, geometry.rot, geometry.scale);
-
   const modeledVertices = new Array(vertices.length);
 
   //拡大縮小、頂点の回転、平行移動
@@ -452,13 +450,29 @@ function model(vertices, geometry) {
   return modeledVertices;
 }
 
+function view(vertices, camPos, camRot) {
+  const viewedVertices = new Array(vertices.length);
+  let mat = Matrix4x4.identity;
+  mat.setTRS(camPos, camRot, new Vector3(1, 1, 1));
+  mat.inverse();
+
+  for (let index = 0; index < vertices.length; index++) {
+    const v = vertices[index];
+    const m = mat.multiplyVector(new Vector4(v.x, v.y, v.z, 1));
+
+    viewedVertices[index] = new Vector3(m.x, m.y, m.z);
+  }
+
+  return viewedVertices;
+}
+
 //透視投影変換を用いて3次元の頂点を2次元の画面に変換する
 function project(vertices) {
   const projectedVertices = new Array(vertices.length);
   //カメラの視野
-  const f = 1 / Math.tan(Mathf.toRad(ViewableAngle / 2));
+  const f = 1 / Math.tan(Mathf.toRad(camera.viewableAngle / 2));
   const a = (CanvasWidth > CanvasHeight ? CanvasWidth : CanvasHeight) / 2;
-  const q = FarClip / (FarClip - NearClip);
+  const q = camera.farClip / (camera.farClip - camera.nearClip);
 
   for (let i = 0; i < vertices.length; i++) {
     const p = vertices[i];
@@ -469,10 +483,22 @@ function project(vertices) {
     // const z = p.z * q - NearClip * q;
     // const w = p.z;
     const mat = new Matrix4x4(
-      a * f, 0, CanvasWidth / 2, 0,
-      0, a * f, CanvasHeight / 2, 0,
-      0, 0, q, -NearClip * q, 
-      0, 0, 1, 0
+      a * f,
+      0,
+      CanvasWidth / 2,
+      0,
+      0,
+      a * f,
+      CanvasHeight / 2,
+      0,
+      0,
+      0,
+      q,
+      -camera.nearClip * q,
+      0,
+      0,
+      1,
+      0
     );
 
     const p4 = mat.multiplyVector(new Vector4(p.x, p.y, p.z, 1));
@@ -489,11 +515,59 @@ function lightDirectness(normal) {
   n.normalize();
 
   //法線ベクトルを視点(Z方向)から見て正の方向になるようにする
-  n = n.z > 0 ? n : n.multiply(-1);
+  if (n.z < 0) {
+    n.multiply(-1);
+  }
 
   //光が三角形に真っすぐに当たっている割合
   return Mathf.clamp(DirectionalLight.dot(n), 0, 1);
 }
+
+document.addEventListener(
+  "keydown",
+  () => {
+    if (event.key === "a") {
+      camera.pos.x -= 0.1;
+    }
+    if (event.key === "d") {
+      camera.pos.x += 0.1;
+    }
+    if (event.key === "w") {
+      camera.pos.z += 0.1;
+    }
+    if (event.key === "s") {
+      camera.pos.z -= 0.1;
+    }
+
+    if (event.key === "q") {
+      camera.rot.y -= 1;
+    }
+    if (event.key === "e") {
+      camera.rot.y += 1;
+    }
+  },
+  false
+);
+
+addEventListener("mousemove", (event) => {
+  const x = event.pageX;
+  const y = event.pageY;
+
+  const dx = x - CanvasWidth / 2;
+  const dy = y - CanvasHeight / 2;
+
+  const cameraLimit = camera.viewableAngle / 2;
+  camera.rot.x = Mathf.clamp(
+    (dy / CanvasHeight) * CameraControlSensitively,
+    -cameraLimit,
+    cameraLimit
+  );
+  camera.rot.y = Mathf.clamp(
+    (dx / CanvasWidth) * CameraControlSensitively,
+    -cameraLimit,
+    cameraLimit
+  );
+});
 
 export function updateValue(sliderId) {
   var slider = document.getElementById(sliderId);

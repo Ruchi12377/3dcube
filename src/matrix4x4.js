@@ -80,26 +80,7 @@ export class Matrix4x4 {
 
         //拡大、ZXYの回転、平行の順番でかける
         const mat = tMat.multiply(rMatY.multiply(rMatX.multiply(rMatZ.multiply(sMat))));
-
-        this.m11 = mat.m11;
-        this.m12 = mat.m12;
-        this.m13 = mat.m13;
-        this.m14 = mat.m14;
-
-        this.m21 = mat.m21;
-        this.m22 = mat.m22;
-        this.m23 = mat.m23;
-        this.m24 = mat.m24;
-
-        this.m31 = mat.m31;
-        this.m32 = mat.m32;
-        this.m33 = mat.m33;
-        this.m34 = mat.m34;
-
-        this.m41 = mat.m41;
-        this.m42 = mat.m42;
-        this.m43 = mat.m43;
-        this.m44 = mat.m44;
+        this.set(mat);
     }
 
     multiply(m) {
@@ -128,6 +109,63 @@ export class Matrix4x4 {
         return matrix;
     }
 
+    determinant() {
+        const detM = 
+          this.m11 * this.m22 * this.m33 * this.m44 + 
+          this.m11 * this.m23 * this.m34 * this.m42 + 
+          this.m11 * this.m24 * this.m32 * this.m43 + 
+          this.m12 * this.m21 * this.m34 * this.m43 + 
+          this.m12 * this.m23 * this.m31 * this.m44 + 
+          this.m12 * this.m24 * this.m33 * this.m41 +
+          this.m13 * this.m21 * this.m32 * this.m44 + 
+          this.m13 * this.m22 * this.m34 * this.m41 + 
+          this.m13 * this.m24 * this.m31 * this.m42 +
+          this.m14 * this.m21 * this.m33 * this.m42 + 
+          this.m14 * this.m22 * this.m31 * this.m43 + 
+          this.m14 * this.m23 * this.m32 * this.m41 -
+          this.m11 * this.m22 * this.m34 * this.m43 -
+          this.m11 * this.m23 * this.m32 * this.m44 - 
+          this.m11 * this.m24 * this.m33 * this.m42 -
+          this.m12 * this.m21 * this.m33 * this.m44 -
+          this.m12 * this.m23 * this.m34 * this.m41 - 
+          this.m12 * this.m24 * this.m31 * this.m43 -
+          this.m13 * this.m21 * this.m34 * this.m42 -
+          this.m13 * this.m22 * this.m31 * this.m44 - 
+          this.m13 * this.m24 * this.m32 * this.m41 -
+          this.m14 * this.m21 * this.m32 * this.m43 -
+          this.m14 * this.m22 * this.m33 * this.m41 - 
+          this.m14 * this.m23 * this.m31 * this.m42;
+
+        return detM;
+    }
+
+    inverse() {
+        const mat = Matrix4x4.identity;
+        const d = this.determinant();
+
+        //とりあえず単位行列を返す
+        if(d == 0) throw new Error(`determinant is 0.`);;
+
+        mat.m11 = (this.m22 * this.m33 * this.m44 + this.m23 * this.m34 * this.m42 + this.m24 * this.m32 * this.m43 - this.m22 * this.m34 * this.m43 - this.m23 * this.m32 * this.m44 - this.m24 * this.m33 * this.m42) / d;
+        mat.m12 = (this.m12 * this.m34 * this.m43 + this.m13 * this.m32 * this.m44 + this.m14 * this.m33 * this.m42 - this.m12 * this.m33 * this.m44 - this.m13 * this.m34 * this.m42 - this.m14 * this.m32 * this.m43) / d;
+        mat.m13 = (this.m12 * this.m23 * this.m44 + this.m13 * this.m24 * this.m42 + this.m14 * this.m22 * this.m43 - this.m12 * this.m24 * this.m43 - this.m13 * this.m22 * this.m44 - this.m14 * this.m23 * this.m42) / d;
+        mat.m14 = (this.m12 * this.m24 * this.m33 + this.m13 * this.m22 * this.m34 + this.m14 * this.m23 * this.m32 - this.m12 * this.m23 * this.m34 - this.m13 * this.m24 * this.m32 - this.m14 * this.m22 * this.m33) / d;
+        mat.m21 = (this.m21 * this.m34 * this.m43 + this.m23 * this.m31 * this.m44 + this.m24 * this.m33 * this.m41 - this.m21 * this.m33 * this.m44 - this.m23 * this.m34 * this.m41 - this.m24 * this.m31 * this.m43) / d;
+        mat.m22 = (this.m11 * this.m33 * this.m44 + this.m13 * this.m34 * this.m41 + this.m14 * this.m31 * this.m43 - this.m11 * this.m34 * this.m43 - this.m13 * this.m31 * this.m44 - this.m14 * this.m33 * this.m41) / d;
+        mat.m23 = (this.m11 * this.m24 * this.m43 + this.m13 * this.m21 * this.m44 + this.m14 * this.m23 * this.m41 - this.m11 * this.m23 * this.m44 - this.m13 * this.m24 * this.m41 - this.m14 * this.m21 * this.m43) / d;
+        mat.m24 = (this.m11 * this.m23 * this.m34 + this.m13 * this.m24 * this.m31 + this.m14 * this.m21 * this.m33 - this.m11 * this.m24 * this.m33 - this.m13 * this.m21 * this.m34 - this.m14 * this.m23 * this.m31) / d;
+        mat.m31 = (this.m21 * this.m32 * this.m44 + this.m22 * this.m34 * this.m41 + this.m24 * this.m31 * this.m42 - this.m21 * this.m34 * this.m42 - this.m22 * this.m31 * this.m44 - this.m24 * this.m32 * this.m41) / d;
+        mat.m32 = (this.m11 * this.m34 * this.m42 + this.m12 * this.m31 * this.m44 + this.m14 * this.m32 * this.m41 - this.m11 * this.m32 * this.m44 - this.m12 * this.m34 * this.m41 - this.m14 * this.m31 * this.m42) / d;
+        mat.m33 = (this.m11 * this.m22 * this.m44 + this.m12 * this.m24 * this.m41 + this.m14 * this.m21 * this.m42 - this.m11 * this.m24 * this.m42 - this.m12 * this.m21 * this.m44 - this.m14 * this.m22 * this.m41) / d;
+        mat.m34 = (this.m11 * this.m24 * this.m32 + this.m12 * this.m21 * this.m34 + this.m14 * this.m22 * this.m31 - this.m11 * this.m22 * this.m34 - this.m12 * this.m24 * this.m31 - this.m14 * this.m21 * this.m32) / d;
+        mat.m41 = (this.m21 * this.m33 * this.m42 + this.m22 * this.m31 * this.m43 + this.m23 * this.m32 * this.m41 - this.m21 * this.m32 * this.m43 - this.m22 * this.m33 * this.m41 - this.m23 * this.m31 * this.m42) / d;
+        mat.m42 = (this.m11 * this.m32 * this.m43 + this.m12 * this.m33 * this.m41 + this.m13 * this.m31 * this.m42 - this.m11 * this.m33 * this.m42 - this.m12 * this.m31 * this.m43 - this.m13 * this.m32 * this.m41) / d;
+        mat.m43 = (this.m11 * this.m23 * this.m42 + this.m12 * this.m21 * this.m43 + this.m13 * this.m22 * this.m41 - this.m11 * this.m22 * this.m43 - this.m12 * this.m23 * this.m41 - this.m13 * this.m21 * this.m42) / d;
+        mat.m44 = (this.m11 * this.m22 * this.m33 + this.m12 * this.m23 * this.m31 + this.m13 * this.m21 * this.m32 - this.m11 * this.m23 * this.m32 - this.m12 * this.m21 * this.m33 - this.m13 * this.m22 * this.m31) / d;
+   
+        this.set(mat);
+    }
+    
     multiplyVector(v) {
         const x = v.x * this.m11 + v.y * this.m12 + v.z * this.m13 + v.w * this.m14;
         const y = v.x * this.m21 + v.y * this.m22 + v.z * this.m23 + v.w * this.m24;
@@ -137,7 +175,29 @@ export class Matrix4x4 {
         return new Vector4(x, y, z, w);
     }
 
+    set(mat) {
+      this.m11 = mat.m11;
+      this.m12 = mat.m12;
+      this.m13 = mat.m13;
+      this.m14 = mat.m14;
+
+      this.m21 = mat.m21;
+      this.m22 = mat.m22;
+      this.m23 = mat.m23;
+      this.m24 = mat.m24;
+
+      this.m31 = mat.m31;
+      this.m32 = mat.m32;
+      this.m33 = mat.m33;
+      this.m34 = mat.m34;
+
+      this.m41 = mat.m41;
+      this.m42 = mat.m42;
+      this.m43 = mat.m43;
+      this.m44 = mat.m44;
+    }
+
     toString() {
-        return `((${this.m11}, ${this.m12}, ${this.m13}, ${this.m14}), (${this.m21}, ${this.m22}, ${this.m23}, ${this.m24}), (${this.m31}, ${this.m32}, ${this.m33}, ${this.m34}), (${this.m41}, ${this.m42}, ${this.m43}, ${this.m44})`;
+        return `((${this.m11.toFixed(5)}, ${this.m12.toFixed(5)}, ${this.m13.toFixed(5)}, ${this.m14.toFixed(5)}), (${this.m21.toFixed(5)}, ${this.m22.toFixed(5)}, ${this.m23.toFixed(5)}, ${this.m24.toFixed(5)}), (${this.m31.toFixed(5)}, ${this.m32.toFixed(5)}, ${this.m33.toFixed(5)}, ${this.m34.toFixed(5)}), (${this.m41.toFixed(5)}, ${this.m42.toFixed(5)}, ${this.m43.toFixed(5)}, ${this.m44.toFixed(5)})`;
     }
 }

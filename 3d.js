@@ -538,20 +538,35 @@ document.addEventListener(
     if (event.key === "s") {
       camera.pos.z -= 0.1;
     }
-
-    if (event.key === "q") {
-      camera.rot.y -= 1;
-    }
-    if (event.key === "e") {
-      camera.rot.y += 1;
-    }
   },
   false
 );
 
 addEventListener("mousemove", (event) => {
-  const x = event.pageX;
-  const y = event.pageY;
+  moveCamera(event.pageX, event.pageY);
+});
+
+addEventListener("touchmove", (event) => {
+  const x = 0;
+  const y = 0;
+
+  if (event.touches && event.touches[0]) {
+    x = event.touches[0].clientX;
+    y = event.touches[0].clientY;
+  } else if (event.originalEvent && event.originalEvent.changedTouches[0]) {
+    x = event.originalEvent.changedTouches[0].clientX;
+    y = event.originalEvent.changedTouches[0].clientY;
+  } else if (event.clientX && event.clientY) {
+    x = event.clientX;
+    y = event.clientY;
+  }
+
+  moveCamera(x, y);
+});
+
+function moveCamera(pageX, pageY) {
+  const x = pageX;
+  const y = pageY;
 
   const dx = x - CanvasWidth / 2;
   const dy = y - CanvasHeight / 2;
@@ -567,7 +582,7 @@ addEventListener("mousemove", (event) => {
     -cameraLimit,
     cameraLimit
   );
-});
+}
 
 export function updateValue(sliderId) {
   var slider = document.getElementById(sliderId);

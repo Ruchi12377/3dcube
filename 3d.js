@@ -3,6 +3,7 @@ import { Color } from "./src/color.js";
 import { Geometry } from "./src/geometry.js";
 import { Mathf } from "./src/math.js";
 import { Matrix4x4 } from "./src/matrix4x4.js";
+import { ObjFile } from "./src/objFile.js";
 import { Texture } from "./src/texture.js";
 import { Vector2 } from "./src/vector2.js";
 import { Vector3 } from "./src/vector3.js";
@@ -39,6 +40,9 @@ mainTexture.loadTexture("./images/texture.png");
 
 let maskTexture = new Texture(32, 32);
 maskTexture.loadTexture("./images/noiseTexture.png");
+
+let arrow = new ObjFile();
+arrow.loadFromObjFile("./arrow.obj");
 
 let threshold = 0.8;
 
@@ -261,6 +265,10 @@ function draw() {
     //各面の描画
     for (let index = 0; index < geometry.triangles.length; index++) {
       const tri = geometry.triangles[index];
+
+      if (tri.length != 3) {
+        console.log("面が三角形ではありません");
+      }
 
       const p1 = vVertices[tri[0]];
       const p2 = vVertices[tri[1]];

@@ -10,7 +10,6 @@ import { Vector3 } from "./src/vector3.js";
 import { Vector4 } from "./src/vector4.js";
 
 //定数宣言
-const FrameRate = 60;
 const CanvasWidth = 600;
 const CanvasHeight = 600;
 const DirectionalLight = new Vector3(0, 0, 1);
@@ -27,9 +26,11 @@ const camera = new Camera(
 //必要な変数たち
 let context;
 
-const depthEmpty = Array.from(new Array(CanvasWidth), () =>
-  new Array(CanvasHeight).fill(Number.MAX_VALUE)
-);
+const depthEmpty = new Uint8ClampedArray(CanvasWidth * CanvasHeight);
+
+for (let i = 0; i < depthEmpty.length; i++) {
+  depthEmpty[i] = 255;
+}
 
 const Alpha = new Color(0, 0, 0, 255);
 
@@ -125,9 +126,9 @@ let cube = new Geometry(
   (color = new Color(0, 127, 255, 255))
 );*/
 
-function dissolve(uv) {
-  const color = mainTexture.getPixelColor(uv);
-  const mask = maskTexture.getPixelColor(uv);
+function dissolve(u, v) {
+  const color = mainTexture.getPixelColor(u, v);
+  const mask = maskTexture.getPixelColor(u, v);
   const gray =
     (mask.red / 255) * 0.2 + (mask.green / 255) * 0.7 + (mask.blue / 255) * 0.1;
 
@@ -218,6 +219,16 @@ let cube2 = new Geometry(
 
 const geometries = [cube /*, cube2*/];
 
+let imageData;
+
+let defaultBuf;
+let buf;
+let buf8;
+let data;
+let startTime, endTime;
+let fps = 0;
+let frame = 0;
+
 window.onload = () => {
   const canvas = document.getElementById("canvas");
   canvas.width = CanvasWidth;
@@ -225,6 +236,10 @@ window.onload = () => {
 
   context = canvas.getContext("2d");
   context.imageSmoothingEnabled = false;
+
+  imageData = context.getImageData(0, 0, CanvasWidth, CanvasHeight);
+  buf = new ArrayBuffer(imageData.data.length);
+  defaultBuf = structuredClone(buf);
 
   updateValue("posX");
   updateValue("posY");
@@ -236,23 +251,27 @@ window.onload = () => {
   updateValue("scaleY");
   updateValue("scaleZ");
   updateValue("threshold");
+
+  startTime = new Date().getTime();
+  draw();
 };
 
-window.setInterval(draw, 1000 / FrameRate);
-
 function draw() {
-  let imageData = context.getImageData(0, 0, CanvasWidth, CanvasHeight);
-  let buf = new ArrayBuffer(imageData.data.length);
-  let buf8 = new Uint8ClampedArray(buf);
-  let data = new Uint32Array(buf);
+  if (imageData == undefined) return;
+  frame++;
 
-  let depthBuffer = JSON.parse(JSON.stringify(depthEmpty));
+  buf = structuredClone(defaultBuf);
+  buf8 = new Uint8ClampedArray(buf);
+  data = new Uint32Array(buf);
+
+  const depthBuffer = structuredClone(depthEmpty);
 
   const after = new Array();
 
   for (let i = 0; i < geometries.length; i++) {
     let geometry = geometries[i];
-    context.strokeStyle = geometry.color;
+    const shader = geometry.pixelShader;
+
     const vertices = geometry.copiedVertices();
     for (let j = 0; j < vertices.length; j++) {
       const v = vertices[j];
@@ -376,10 +395,17 @@ function draw() {
         ) {
           //x2 == x1のときは0で割ることになるので
           const z = z1 + (x - x1) * kz;
+          const zUInt8 = parseInt(
+            Mathf.clamp(z / (camera.farClip - camera.nearClip), 0, 1) * 255
+          );
           if (z < camera.nearClip || z > camera.farClip) continue;
 
           //描画しようとしているピクセルが、奥にある場合
-          if (x < 0 || x >= CanvasWidth || z > depthBuffer[x][y]) {
+          if (
+            x < 0 ||
+            x >= CanvasWidth ||
+            zUInt8 > depthBuffer[y * CanvasWidth + x]
+          ) {
             continue;
           }
 
@@ -391,53 +417,68 @@ function draw() {
           u = Mathf.clamp(u, 0, 1); // 計算誤差対策
           v = 1 - Mathf.clamp(v, 0, 1);
 
-          const color = geometry.pixelShader(new Vector2(u, v));
+          const color = shader(u, v);
+          const index = y * CanvasWidth + x;
 
           if (color instanceof Color == false) {
-            data[y * CanvasWidth + x] = Alpha;
+            data[index] = Alpha;
             continue;
           }
 
           //手前にあるのでデプスを更新
-          depthBuffer[x][y] = z;
+          depthBuffer[index] = zUInt8;
 
-          data[y * CanvasWidth + x] = color.shadedColor(kl).toColor32();
+          data[index] = color.shadedColor(kl).toColor32();
         }
       }
     }
   }
 
-  function getCanvasPixelColor(uv) {
-    const x = parseInt(parseInt(uv.x) % CanvasWidth);
-    const y = parseInt(parseInt(uv.y) % CanvasHeight);
+  // function getCanvasPixelColor(uv) {
+  //   const x = parseInt(parseInt(uv.x) % CanvasWidth);
+  //   const y = parseInt(parseInt(uv.y) % CanvasHeight);
 
-    const color32 = data[y * CanvasWidth + x];
+  //   const color32 = data[y * CanvasWidth + x];
 
-    const alpha = (color32 >> 24) & 0xff;
-    const blue = (color32 >> 16) & 0xff;
-    const green = (color32 >> 8) & 0xff;
-    const red = color32 & 0xff;
+  //   const alpha = (color32 >> 24) & 0xff;
+  //   const blue = (color32 >> 16) & 0xff;
+  //   const green = (color32 >> 8) & 0xff;
+  //   const red = color32 & 0xff;
 
-    return new Color(red, green, blue, alpha);
-  }
+  //   return new Color(red, green, blue, alpha);
+  // }
 
   imageData.data.set(buf8);
   context.putImageData(imageData, 0, 0);
 
   {
     context.save();
-    for (let i = 0; i < after.length; i++) {
-      const element = after[i];
-      context.font = "24px Sans-serif";
-      context.textAlign = "center";
-      context.strokeStyle = "black";
-      context.lineWidth = 5;
-      context.strokeText(element[0], element[1], element[2]);
-      context.fillStyle = "white";
-      context.fillText(element[0], element[1], element[2]);
+    // for (let i = 0; i < after.length; i++) {
+    //   const element = after[i];
+    //   context.font = "24px Sans-serif";
+    //   context.textAlign = "center";
+    //   context.strokeStyle = "black";
+    //   context.lineWidth = 5;
+    //   context.strokeText(element[0], element[1], element[2]);
+    //   context.fillStyle = "white";
+    //   context.fillText(element[0], element[1], element[2]);
+    // }
+
+    context.font = "32px sans-serif";
+    context.fillStyle = "#555";
+    context.fillText(fps + " FPS", 190, 250);
+
+    endTime = new Date().getTime();
+    if (endTime - startTime >= 1000) {
+      fps = frame;
+      frame = 0;
+      startTime = new Date().getTime();
     }
+
     context.restore();
   }
+
+  requestAnimationFrame(draw);
 }
 
 function model(vertices, geometry) {

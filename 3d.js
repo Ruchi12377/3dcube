@@ -554,23 +554,27 @@ addEventListener("mousemove", (event) => {
   moveCamera(event.pageX, event.pageY);
 });
 
-addEventListener("touchmove", (event) => {
-  const x = 0;
-  const y = 0;
+addEventListener(
+  "touchmove",
+  (event) => {
+    let x = 0;
+    let y = 0;
 
-  if (event.touches && event.touches[0]) {
-    x = event.touches[0].clientX;
-    y = event.touches[0].clientY;
-  } else if (event.originalEvent && event.originalEvent.changedTouches[0]) {
-    x = event.originalEvent.changedTouches[0].clientX;
-    y = event.originalEvent.changedTouches[0].clientY;
-  } else if (event.clientX && event.clientY) {
-    x = event.clientX;
-    y = event.clientY;
-  }
+    if (event.touches && event.touches[0]) {
+      x = event.touches[0].clientX;
+      y = event.touches[0].clientY;
+    } else if (event.originalEvent && event.originalEvent.changedTouches[0]) {
+      x = event.originalEvent.changedTouches[0].clientX;
+      y = event.originalEvent.changedTouches[0].clientY;
+    } else if (event.clientX && event.clientY) {
+      x = event.clientX;
+      y = event.clientY;
+    }
 
-  moveCamera(x, y);
-});
+    moveCamera(x, y);
+  },
+  false
+);
 
 function moveCamera(pageX, pageY) {
   const x = pageX;

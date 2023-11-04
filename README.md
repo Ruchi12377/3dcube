@@ -1,4 +1,6 @@
-# Feature
+# 3D Rendering Engine written in Pure JavaScript
+
+## Feature
 
 - FXAA (アンチエイリアス)
 - 半透明描画
@@ -7,7 +9,8 @@
 - Ray
 - パーティクル
 - サウンドシステム
+- Normal Map
 
-# LICENSE
+## License
 
 Stanford Computer Graphics Laboratory

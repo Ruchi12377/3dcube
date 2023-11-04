@@ -72,6 +72,6 @@ export class Vector3 {
   }
 
   toString() {
-    return `(${this.x}, ${this.y}, ${this.z})`;
+    return `(${this.x.toFixed(2)}, ${this.y.toFixed(2)}, ${this.z.toFixed(2)})`;
   }
 }

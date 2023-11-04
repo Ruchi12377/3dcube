@@ -9,6 +9,10 @@ export class Color {
     this.alpha = Mathf.clamp(alpha, 0, 255);
   }
 
+  static get Alpha() {
+    return new Color(0, 0, 0, 255);
+  }
+
   toColorCode() {
     return (
       "#" +

@@ -46,8 +46,12 @@ function dissolve(u, v) {
   return;
 }
 
-const bunnyFile = new ObjFile();
+function standard(u, v) {
+  return mainTexture.getPixelColor(u, v);
+}
+
 let bunny;
+const bunnyFile = new ObjFile();
 bunnyFile.loadFromObjFile("./bunny.obj", () => {
   bunny = new Geometry(
     new Vector3(0, 0, 2),
@@ -60,6 +64,21 @@ bunnyFile.loadFromObjFile("./bunny.obj", () => {
   );
 
   engine.geometries.push(bunny);
+});
+
+const arrowFile = new ObjFile();
+arrowFile.loadFromObjFile("./arrow.obj", () => {
+  const arrow = new Geometry(
+    new Vector3(0, 2, 2),
+    new Vector3(0, 0, 180),
+    new Vector3(0.1, 0.1, 0.1),
+    arrowFile.vertices,
+    arrowFile.uvs,
+    arrowFile.faces,
+    standard
+  );
+
+  engine.geometries.push(arrow);
 });
 
 window.onload = () => {

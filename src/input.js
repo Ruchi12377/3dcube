@@ -24,7 +24,7 @@ export class Input {
       () => {
         this.inputMap.set(event.code, "up@" + Time.currentFrame);
         if (this.keyUp) {
-          this.keyDown(event.key);
+          this.keyDown(event.code);
         }
       },
       false

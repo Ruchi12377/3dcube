@@ -34,6 +34,7 @@ export class KeyCode {
   static MetaRight = "MetaRight";
   static Enter = "Enter";
   static Backspace = "Backspace";
+  static Space = "Space";
   static ArrowUp = "ArrowUp";
   static ArrowDown = "ArrowDown";
   static ArrowLeft = "ArrowLeft";

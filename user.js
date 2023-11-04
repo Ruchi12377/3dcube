@@ -2,6 +2,7 @@ import { Camera } from "./src/camera.js";
 import { Engine } from "./src/engine.js";
 import { Geometry } from "./src/geometry.js";
 import { Input } from "./src/input.js";
+import { KeyCode } from "./src/keyCode.js";
 import { Mathf } from "./src/math.js";
 import { ObjFile } from "./src/objFile.js";
 import { Texture } from "./src/texture.js";
@@ -132,17 +133,21 @@ function update() {
     bunny.rot.y += 0.5;
   }
 
-  if (Input.getKey("a")) {
+  if (Input.getKey(KeyCode.KeyA)) {
     camera.pos.x -= speed * Time.deltaTime;
   }
-  if (Input.getKey("d")) {
+  if (Input.getKey(KeyCode.KeyD)) {
     camera.pos.x += speed * Time.deltaTime;
   }
-  if (Input.getKey("w")) {
+  if (Input.getKey(KeyCode.KeyW)) {
     camera.pos.z += speed * Time.deltaTime;
   }
-  if (Input.getKey("s")) {
+  if (Input.getKey(KeyCode.KeyS)) {
     camera.pos.z -= speed * Time.deltaTime;
+  }
+
+  if (camera.pos.y < 1) {
+    camera.pos.y = 1;
   }
 
   //1秒に一回FPS更新

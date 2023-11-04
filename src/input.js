@@ -9,11 +9,11 @@ export class Input {
     document.addEventListener(
       "keydown",
       () => {
-        if (this.inputMap.has(event.key) == false) {
-          this.inputMap.set(event.key, "down@" + Time.currentFrame);
+        if (this.inputMap.has(event.code) == false) {
+          this.inputMap.set(event.code, "down@" + Time.currentFrame);
         }
         if (this.keyDown) {
-          this.keyDown(event.key);
+          this.keyDown(event.code);
         }
       },
       false
@@ -22,7 +22,7 @@ export class Input {
     document.addEventListener(
       "keyup",
       () => {
-        this.inputMap.set(event.key, "up@" + Time.currentFrame);
+        this.inputMap.set(event.code, "up@" + Time.currentFrame);
         if (this.keyUp) {
           this.keyDown(event.key);
         }

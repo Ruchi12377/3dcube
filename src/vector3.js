@@ -5,6 +5,18 @@ export class Vector3 {
     this.z = z;
   }
 
+  static get right() {
+    return new Vector3(1, 0, 0);
+  }
+
+  static get up() {
+    return new Vector3(0, 1, 0);
+  }
+
+  static get forward() {
+    return new Vector3(0, 0, 1);
+  }
+
   copy() {
     return new Vector3(this.x, this.y, this.z);
   }

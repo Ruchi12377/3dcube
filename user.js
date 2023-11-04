@@ -135,18 +135,31 @@ function update() {
     bunny.rot.y += 0.5;
   }
 
+  let moveX = 0;
+  let moveZ = 0;
   if (Input.getKey(KeyCode.KeyA)) {
-    camera.pos.x -= speed * Time.deltaTime;
+    moveX -= speed;
   }
   if (Input.getKey(KeyCode.KeyD)) {
-    camera.pos.x += speed * Time.deltaTime;
+    moveX += speed;
   }
   if (Input.getKey(KeyCode.KeyW)) {
-    camera.pos.z += speed * Time.deltaTime;
+    moveZ += speed;
   }
   if (Input.getKey(KeyCode.KeyS)) {
-    camera.pos.z -= speed * Time.deltaTime;
+    moveZ -= speed;
   }
+
+  const xVec = camera.right;
+  const zVec = camera.forward;
+  xVec.multiply(moveX);
+  zVec.multiply(moveZ);
+
+  const moveVector = xVec;
+  moveVector.add(zVec);
+  moveVector.y = 0;
+  moveVector.multiply(Time.deltaTime);
+  camera.pos.add(moveVector);
 
   if (Input.getKeyDown(KeyCode.Space) && canJump) {
     fallSpeed = 0.05;

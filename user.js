@@ -22,7 +22,9 @@ const camera = new Camera(
   new Vector3(0, 0, 0)
 );
 
-const engine = new Engine(CanvasWidth, CanvasHeight, camera, update);
+const engine = new Engine(CanvasWidth, CanvasHeight, camera, update, drawUI);
+let fps = 0;
+let latestTime = 0;
 
 //描画したい者たち
 const mainTexture = new Texture(256, 256);
@@ -83,11 +85,8 @@ arrowFile.loadFromObjFile("./arrow.obj", () => {
 
 window.onload = () => {
   engine.start();
+  fps = Time.fps;
 };
-
-canvas.addEventListener("click", async () => {
-  await canvas.requestPointerLock();
-});
 
 canvas.addEventListener("mousemove", (event) => {
   moveCamera(event.movementX, event.movementY);
@@ -145,4 +144,18 @@ function update() {
   if (Input.getKey("s")) {
     camera.pos.z -= speed * Time.deltaTime;
   }
+
+  //1秒に一回FPS更新
+  if (Time.time - latestTime >= 1) {
+    fps = Time.fps;
+    latestTime = Time.time;
+  }
+}
+
+function drawUI(context) {
+  context.font = "32px sans-serif";
+  context.fillStyle = "#555";
+  context.fillText(fps.toFixed(0) + " FPS", 5, 30);
+  // context.fillText("Camera Pos : " + camera.pos.toString(), 5, 60);
+  // context.fillText("Camera Rot : " + camera.rot.toString(), 5, 90);
 }

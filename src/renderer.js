@@ -1,12 +1,11 @@
 import { Color } from "./color.js";
 import { Mathf } from "./math.js";
 import { Matrix4x4 } from "./matrix4x4.js";
-import { Time } from "./time.js";
 import { Vector3 } from "./vector3.js";
 import { Vector4 } from "./vector4.js";
 
 export class Renderer {
-  constructor(canvasWidth, canvasHeight, camera) {
+  constructor(canvasWidth, canvasHeight, camera, drawUI) {
     //なんにも描画されてないキャンバスのバッファ
     this.defaultBuf = [];
     //キャンバスに表示するための描画用バッファ
@@ -19,6 +18,7 @@ export class Renderer {
     this.canvasWidth = canvasWidth;
     this.canvasHeight = canvasHeight;
     this.camera = camera;
+    this.drawUI = drawUI;
 
     //デプスのコピー元の配列を初期化
     this.depthEmpty = new Uint8ClampedArray(
@@ -35,6 +35,9 @@ export class Renderer {
     const canvas = document.getElementById("canvas");
     canvas.width = this.canvasWidth;
     canvas.height = this.canvasHeight;
+    canvas.addEventListener("click", async () => {
+      canvas.requestPointerLock();
+    });
 
     this.context = canvas.getContext("2d");
     this.context.imageSmoothingEnabled = false;
@@ -230,14 +233,10 @@ export class Renderer {
     this.imageData.data.set(this.buf8);
     this.context.putImageData(this.imageData, 0, 0);
 
-    {
+    //UserのUI描画
+    if (this.drawUI) {
       this.context.save();
-      this.context.font = "32px sans-serif";
-      this.context.fillStyle = "#555";
-      this.context.fillText(Time.fps.toFixed(2) + " FPS", 5, 30);
-      // context.fillText("Camera Pos : " + camera.pos.toString(), 5, 60);
-      // context.fillText("Camera Rot : " + camera.rot.toString(), 5, 90);
-
+      this.drawUI(this.context);
       this.context.restore();
     }
   }

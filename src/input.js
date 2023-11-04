@@ -5,7 +5,7 @@ export class Input {
   static keyUp;
 
   static inputMap = new Map();
-  static start() {
+  static start(canvas) {
     document.addEventListener(
       "keydown",
       () => {
@@ -29,6 +29,8 @@ export class Input {
       },
       false
     );
+
+    this.canvas = canvas;
   }
 
   static getKeyInfo(key) {

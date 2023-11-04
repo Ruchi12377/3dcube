@@ -12,6 +12,10 @@ export class Time {
     return this._deltaMilliTime / 1000;
   }
 
+  static get time() {
+    return new Date().getTime() / 1000;
+  }
+
   static update() {
     this.currentFrame++;
 

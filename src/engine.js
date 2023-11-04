@@ -3,19 +3,21 @@ import { Renderer } from "./renderer.js";
 import { Time } from "./time.js";
 
 export class Engine {
-  constructor(canvasWidth, canvasHeight, camera, userUpdate) {
+  constructor(canvasWidth, canvasHeight, camera, userUpdate, userDrawUI) {
     this.canvasWidth = canvasWidth;
     this.canvasHeight = canvasHeight;
 
     this.camera = camera;
 
+    this.userUpdate = userUpdate;
+    this.userDrawUI = userDrawUI;
+
     this.rederer = new Renderer(
       this.canvasWidth,
       this.canvasHeight,
-      this.camera
+      this.camera,
+      this.userDrawUI
     );
-
-    this.userUpdate = userUpdate;
 
     this.geometries = [];
     this.bindedUpdate = this.update.bind(this);

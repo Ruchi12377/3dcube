@@ -14,6 +14,9 @@ const CanvasWidth = 600;
 const CanvasHeight = 600;
 
 const speed = 5;
+let fallSpeed = 0;
+const gravity = -0.1;
+let canJump = true;
 
 const camera = new Camera(
   60,
@@ -123,7 +126,6 @@ function moveCamera(movementX, movementY) {
   camera.rot.x += movementY * CameraControlSensitively;
   camera.rot.x = Mathf.clamp(camera.rot.x, -cameraLimit, cameraLimit);
   camera.rot.y += movementX * CameraControlSensitively;
-  camera.rot.y = Mathf.clamp(camera.rot.y, -cameraLimit, cameraLimit);
 }
 
 function update() {
@@ -146,8 +148,19 @@ function update() {
     camera.pos.z -= speed * Time.deltaTime;
   }
 
-  if (camera.pos.y < 1) {
+  if (Input.getKeyDown(KeyCode.Space) && canJump) {
+    fallSpeed = 0.05;
+    canJump = false;
+  }
+
+  fallSpeed += gravity * Time.deltaTime;
+  camera.pos.y += fallSpeed;
+
+  //地面にいる
+  if (camera.pos.y <= 1) {
     camera.pos.y = 1;
+    fallSpeed = 0;
+    canJump = true;
   }
 
   //1秒に一回FPS更新

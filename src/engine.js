@@ -1,3 +1,4 @@
+import { Input } from "./input.js";
 import { Renderer } from "./renderer.js";
 import { Time } from "./time.js";
 
@@ -21,12 +22,14 @@ export class Engine {
   }
 
   start() {
+    Input.start();
     this.rederer.start();
     this.bindedUpdate();
   }
 
   update() {
     Time.update();
+    Input.update();
 
     //ユーザーのアップデートコールバックを呼ぶ
     if (this.userUpdate) {

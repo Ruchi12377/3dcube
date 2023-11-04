@@ -1,6 +1,7 @@
 import { Camera } from "./src/camera.js";
 import { Engine } from "./src/engine.js";
 import { Geometry } from "./src/geometry.js";
+import { Input } from "./src/input.js";
 import { Mathf } from "./src/math.js";
 import { ObjFile } from "./src/objFile.js";
 import { Texture } from "./src/texture.js";
@@ -10,6 +11,8 @@ import { Vector3 } from "./src/vector3.js";
 const CameraControlSensitively = 0.1;
 const CanvasWidth = 600;
 const CanvasHeight = 600;
+
+const speed = 5;
 
 const camera = new Camera(
   60,
@@ -96,25 +99,6 @@ canvas.addEventListener(
   false
 );
 
-document.addEventListener(
-  "keydown",
-  () => {
-    if (event.key === "a") {
-      camera.pos.x -= 0.1;
-    }
-    if (event.key === "d") {
-      camera.pos.x += 0.1;
-    }
-    if (event.key === "w") {
-      camera.pos.z += 0.1;
-    }
-    if (event.key === "s") {
-      camera.pos.z -= 0.1;
-    }
-  },
-  false
-);
-
 function moveCamera(movementX, movementY) {
   const cameraLimit = camera.viewableAngle / 2;
   camera.rot.x += movementY * CameraControlSensitively;
@@ -128,5 +112,18 @@ function update() {
 
   if (bunny) {
     bunny.rot.y += 0.5;
+  }
+
+  if (Input.getKey("a")) {
+    camera.pos.x -= speed * Time.deltaTime;
+  }
+  if (Input.getKey("d")) {
+    camera.pos.x += speed * Time.deltaTime;
+  }
+  if (Input.getKey("w")) {
+    camera.pos.z += speed * Time.deltaTime;
+  }
+  if (Input.getKey("s")) {
+    camera.pos.z -= speed * Time.deltaTime;
   }
 }

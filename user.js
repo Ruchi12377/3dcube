@@ -65,6 +65,7 @@ bunnyFile.loadFromObjFile("./bunny.obj", () => {
     new Vector3(1, 1, 1),
     bunnyFile.vertices,
     bunnyFile.uvs,
+    bunnyFile.normals,
     bunnyFile.faces,
     dissolve
   );
@@ -80,6 +81,7 @@ arrowFile.loadFromObjFile("./arrow.obj", () => {
     new Vector3(0.1, 0.1, 0.1),
     arrowFile.vertices,
     arrowFile.uvs,
+    arrowFile.normals,
     arrowFile.faces,
     standard
   );

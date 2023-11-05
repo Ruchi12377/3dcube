@@ -1,8 +1,8 @@
 export class Vector3 {
   constructor(x, y, z) {
-    this.x = x;
-    this.y = y;
-    this.z = z;
+    this.x = Number(x);
+    this.y = Number(y);
+    this.z = Number(z);
   }
 
   static get right() {

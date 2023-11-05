@@ -6,6 +6,7 @@ export class ObjFile {
   constructor() {
     this.vertices = [];
     this.uvs = [];
+    this.normals = [];
     this.faces = [];
   }
 
@@ -24,6 +25,8 @@ export class ObjFile {
             this.vertices.push(new Vector3(data[1], data[2], data[3]));
           } else if (data[0] == "vt") {
             this.uvs.push(new Vector2(data[1], data[2]));
+          } else if (data[0] == "vn") {
+            this.normals.push(new Vector3(data[1], data[2], data[3]));
           } else if (data[0] == "f") {
             const face = [];
             for (let j = 1; j < data.length; j++) {
@@ -35,7 +38,9 @@ export class ObjFile {
               } else if (values.length == 3) {
                 if (values[1] != "") {
                   //頂点インデックス、テクスチャインデックス、頂点法線ベクトル番号
-                  face.push(new Vertex(values[0] - 1, values[1] - 1));
+                  face.push(
+                    new Vertex(values[0] - 1, values[1] - 1, values[2] - 1)
+                  );
                 } else {
                   //頂点インデックス、、頂点法線ベクトル番号
                 }

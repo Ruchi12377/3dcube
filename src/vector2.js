@@ -1,7 +1,7 @@
 export class Vector2 {
   constructor(x, y) {
-    this.x = x;
-    this.y = y;
+    this.x = Number(x);
+    this.y = Number(y);
   }
 
   copy() {
@@ -52,5 +52,9 @@ export class Vector2 {
     v.normalize();
 
     return v;
+  }
+
+  toString() {
+    return `(${this.x.toFixed(2)}, ${this.y.toFixed(2)})`;
   }
 }

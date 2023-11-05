@@ -1,9 +1,9 @@
 export class Vector4 {
   constructor(x, y, z, w) {
-    this.x = x;
-    this.y = y;
-    this.z = z;
-    this.w = w;
+    this.x = Number(x);
+    this.y = Number(y);
+    this.z = Number(z);
+    this.w = Number(w);
   }
 
   copy() {
@@ -29,6 +29,6 @@ export class Vector4 {
   }
 
   toString() {
-    return `(${this.x}, ${this.y}, ${this.z}), ${this.w})`;
+    return `(${this.x}, ${this.y}, ${this.z}, ${this.w})`;
   }
 }

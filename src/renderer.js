@@ -65,15 +65,24 @@ export class Renderer {
       let geometry = geometries[i];
       const shader = geometry.pixelShader;
 
+      //頂点とノーマルのY軸反転
       const vertices = geometry.copiedVertices();
       for (let j = 0; j < vertices.length; j++) {
         const v = vertices[j];
         vertices[j] = new Vector3(v.x, -v.y, v.z);
       }
 
+      const normals = geometry.copiedNormals();
+      for (let j = 0; j < normals.length; j++) {
+        const n = normals[j];
+        normals[j] = new Vector3(n.x, -n.y, n.z);
+      }
+
       const mVertices = this.model(vertices, geometry);
       const vVertices = this.view(mVertices, this.camera.pos, this.camera.rot);
       const pVertices = this.project(vVertices);
+
+      const mNormals = this.modelNormal(normals, geometry);
 
       //各面の描画
       for (let index = 0; index < geometry.faces.length; index++) {
@@ -101,18 +110,28 @@ export class Renderer {
         //真横と裏は描画しない
         if (d <= 0) continue;
 
-        //lightに関しての定数kなのでkl
-        const kl = this.lightDirectness(normal);
-
         //vertices sortedの略
         let vs = [
-          [pVertices[face[0].vIndex], geometry.uvs[face[0].uvIndex]],
-          [pVertices[face[1].vIndex], geometry.uvs[face[1].uvIndex]],
-          [pVertices[face[2].vIndex], geometry.uvs[face[2].uvIndex]],
+          [
+            pVertices[face[0].vIndex],
+            geometry.uvs[face[0].uvIndex],
+            mNormals[face[0].nIndex],
+          ],
+          [
+            pVertices[face[1].vIndex],
+            geometry.uvs[face[1].uvIndex],
+            mNormals[face[1].nIndex],
+          ],
+          [
+            pVertices[face[2].vIndex],
+            geometry.uvs[face[2].uvIndex],
+            mNormals[face[2].nIndex],
+          ],
         ];
         //小さい順に並べる
         vs.sort((a, b) => (a[0].y < b[0].y ? -1 : 1));
         const uvs = [vs[0][1].copy(), vs[1][1].copy(), vs[2][1].copy()];
+        const pns = [vs[0][2].copy(), vs[1][2].copy(), vs[2][2].copy()];
 
         //vsのソートされた順番に合わせる
         vs = vs.map((x) => x[0]);
@@ -173,6 +192,28 @@ export class Renderer {
             uvs[0].z +
             ((y - vs[0].y) * (uvs[2].z - uvs[0].z)) / (vs[2].y - vs[0].y);
 
+          const nx1 =
+            pns[p].x +
+            ((y - vs[p].y) * (pns[p + 1].x - pns[p].x)) /
+              (vs[p + 1].y - vs[p].y);
+          const ny1 =
+            pns[p].y +
+            ((y - vs[p].y) * (pns[p + 1].y - pns[p].y)) /
+              (vs[p + 1].y - vs[p].y);
+          const nz1 =
+            pns[p].z +
+            ((y - vs[p].y) * (pns[p + 1].z - pns[p].z)) /
+              (vs[p + 1].y - vs[p].y);
+          const nx2 =
+            pns[0].x +
+            ((y - vs[0].y) * (pns[2].x - pns[0].x)) / (vs[2].y - vs[0].y);
+          const ny2 =
+            pns[0].y +
+            ((y - vs[0].y) * (pns[2].y - pns[0].y)) / (vs[2].y - vs[0].y);
+          const nz2 =
+            pns[0].z +
+            ((y - vs[0].y) * (pns[2].z - pns[0].z)) / (vs[2].y - vs[0].y);
+
           //事前計算したほうが早いので
           //x1 == x2のときは
           //z1 + (x - x1) * 0 = z1
@@ -212,7 +253,6 @@ export class Renderer {
             v /= w;
             u = Mathf.clamp(u, 0, 1); // 計算誤差対策
             v = 1 - Mathf.clamp(v, 0, 1);
-
             const color = shader(u, v);
             const index = y * this.canvasWidth + x;
 
@@ -224,6 +264,15 @@ export class Renderer {
             //手前にあるのでデプスを更新
             depthBuffer[index] = zUInt8;
 
+            //lightに関しての定数kなのでkl
+            const nx =
+              x2 == x1 ? nx1 : nx1 + ((x - x1) * (nx2 - nx1)) / (x2 - x1);
+            const ny =
+              x2 == x1 ? ny1 : ny1 + ((x - x1) * (ny2 - ny1)) / (x2 - x1);
+            const nz =
+              x2 == x1 ? nz1 : nz1 + ((x - x1) * (nz2 - nz1)) / (x2 - x1);
+            // const kl = this.lightDirectness(new Vector3(nx, ny, nz));
+            const kl = this.lightDirectness(normal);
             this.data[index] = color.shadedColor(kl).toColor32();
           }
         }
@@ -242,21 +291,38 @@ export class Renderer {
   }
 
   model(vertices, geometry) {
-    let mat = Matrix4x4.identity;
+    const mat = Matrix4x4.identity;
     const pos = geometry.pos;
     const posYInv = new Vector3(pos.x, -pos.y, pos.z);
     mat.setTRS(posYInv, geometry.rot, geometry.scale);
     const modeledVertices = new Array(vertices.length);
 
     //拡大縮小、頂点の回転、平行移動
-    for (let index = 0; index < vertices.length; index++) {
-      const v = vertices[index];
+    for (let i = 0; i < vertices.length; i++) {
+      const v = vertices[i];
       const m = mat.multiplyVector(new Vector4(v.x, v.y, v.z, 1));
 
-      modeledVertices[index] = new Vector3(m.x, m.y, m.z);
+      modeledVertices[i] = new Vector3(m.x, m.y, m.z);
     }
 
     return modeledVertices;
+  }
+
+  modelNormal(normals, geometry) {
+    const mat = Matrix4x4.identity;
+    mat.rotation(geometry.rot);
+    const modeledNormals = new Array(normals.length);
+
+    //ノーマル
+    //頂点の回転
+    for (let i = 0; i < normals.length; i++) {
+      const n = normals[i];
+      const m = mat.multiplyVector(new Vector4(n.x, n.y, n.z, 1));
+
+      modeledNormals[i] = new Vector3(m.x, m.y, m.z);
+    }
+
+    return modeledNormals;
   }
 
   view(vertices, camPos, camRot) {

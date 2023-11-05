@@ -1,6 +1,6 @@
 # 3D Rendering Engine written in Pure JavaScript
 
-## Feature
+## Future
 
 - FXAA (アンチエイリアス)
 - 半透明描画

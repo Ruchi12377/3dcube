@@ -28,7 +28,7 @@ export class Renderer {
       this.depthEmpty[i] = 255;
     }
 
-    this.directionalLight = new Vector3(0, 0, 1);
+    this.directionalLight = new Vector3(0.3, 0.1, 0.7);
   }
 
   start() {
@@ -230,19 +230,18 @@ export class Renderer {
             const z = z1 + (x - x1) * kz;
             const zUInt8 = parseInt(
               Mathf.clamp(
-                z / (this.camera.farClip - this.camera.nearClip),
+                (z - this.camera.nearClip) /
+                  (this.camera.farClip - this.camera.nearClip),
                 0,
                 1
               ) * 255
             );
             if (z < this.camera.nearClip || z > this.camera.farClip) continue;
 
+            const index = y * this.canvasWidth + x;
+
             //描画しようとしているピクセルが、奥にある場合
-            if (
-              x < 0 ||
-              x >= this.canvasWidth ||
-              zUInt8 > depthBuffer[y * this.canvasWidth + x]
-            ) {
+            if (x < 0 || x >= this.canvasWidth || zUInt8 > depthBuffer[index]) {
               continue;
             }
 
@@ -254,7 +253,6 @@ export class Renderer {
             u = Mathf.clamp(u, 0, 1); // 計算誤差対策
             v = 1 - Mathf.clamp(v, 0, 1);
             const color = shader(u, v);
-            const index = y * this.canvasWidth + x;
 
             if (color instanceof Color == false) {
               this.data[index] = Color.Alpha;
@@ -391,15 +389,13 @@ export class Renderer {
   }
 
   lightDirectness(normal) {
-    let n = normal.copy();
+    const n = normal.copy();
     n.normalize();
-
-    //法線ベクトルを視点(Z方向)から見て正の方向になるようにする
-    if (n.z < 0) {
-      n.multiply(-1);
-    }
+    n.multiply(-1);
+    const l = this.directionalLight.copy();
+    l.normalize();
 
     //光が三角形に真っすぐに当たっている割合
-    return Mathf.clamp(this.directionalLight.dot(n), 0, 1);
+    return Mathf.clamp(l.dot(n), 0, 1);
   }
 }

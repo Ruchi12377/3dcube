@@ -327,8 +327,9 @@ export class Renderer {
   view(vertices, camPos, camRot) {
     const viewedVertices = new Array(vertices.length);
     let mat = Matrix4x4.identity;
-    const posYInv = new Vector3(camPos.x, -camPos.y, camPos.z);
-    mat.setTRS(posYInv, camRot, new Vector3(1, 1, 1));
+    const posXYInv = new Vector3(-camPos.x, -camPos.y, camPos.z);
+    const rotYInv = new Vector3(camRot.x, -camRot.y, camRot.z);
+    mat.setTRS(posXYInv, rotYInv, new Vector3(1, 1, 1));
     mat.inverse();
 
     for (let index = 0; index < vertices.length; index++) {
@@ -362,7 +363,7 @@ export class Renderer {
       // const z = p.z * q - NearClip * q;
       // const w = p.z;
       const mat = new Matrix4x4(
-        a * f,
+        -a * f,
         0,
         this.canvasWidth / 2,
         0,

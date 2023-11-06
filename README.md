@@ -13,8 +13,6 @@
 
 ## Known Issues
 
-- オブジェクトのX軸が反転している
-
 ## License
 
 Stanford Computer Graphics Laboratory

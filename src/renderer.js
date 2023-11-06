@@ -271,8 +271,7 @@ export class Renderer {
               x2 == x1 ? ny1 : ny1 + ((x - x1) * (ny2 - ny1)) / (x2 - x1);
             const nz =
               x2 == x1 ? nz1 : nz1 + ((x - x1) * (nz2 - nz1)) / (x2 - x1);
-            // const kl = this.lightDirectness(new Vector3(nx, ny, nz));
-            const kl = this.lightDirectness(normal);
+            const kl = this.lightDirectness(new Vector3(nx, ny, nz));
             this.data[index] = color.shadedColor(kl).toColor32();
           }
         }

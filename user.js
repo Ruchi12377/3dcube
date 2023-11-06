@@ -30,12 +30,14 @@ const engine = new Engine(CanvasWidth, CanvasHeight, camera, update, drawUI);
 let fps = 0;
 let latestTime = 0;
 
-//描画したい者たち
 const mainTexture = new Texture(256, 256);
 mainTexture.loadTexture("./images/wood.png");
 
 const maskTexture = new Texture(256, 256);
 maskTexture.loadTexture("./images/noiseTexture.png");
+
+const rgbTexture = new Texture(256, 256);
+rgbTexture.loadTexture("./images/rgbtest.png");
 
 let threshold = 1;
 let previousTouch;
@@ -54,6 +56,10 @@ function dissolve(u, v) {
 
 function standard(u, v) {
   return mainTexture.getPixelColor(u, v);
+}
+
+function standardArrow(u, v) {
+  return rgbTexture.getPixelColor(u, v);
 }
 
 let bunny;
@@ -87,6 +93,22 @@ arrowFile.loadFromObjFile("./arrow.obj", () => {
   );
 
   engine.geometries.push(arrow);
+});
+
+const arrow3dFile = new ObjFile();
+arrow3dFile.loadFromObjFile("./arrow3d.obj", () => {
+  const arrow3d = new Geometry(
+    new Vector3(0, 0, 0),
+    new Vector3(0, 0, 0),
+    new Vector3(1, 1, 1),
+    arrow3dFile.vertices,
+    arrow3dFile.uvs,
+    arrow3dFile.normals,
+    arrow3dFile.faces,
+    standardArrow
+  );
+
+  engine.geometries.push(arrow3d);
 });
 
 window.onload = () => {

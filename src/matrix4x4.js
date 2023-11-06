@@ -76,7 +76,7 @@ export class Matrix4x4 {
 
   rotationZ(z) {
     const zRad = Mathf.toRad(-z);
-    return  new Matrix4x4(
+    return new Matrix4x4(
       Math.cos(zRad), -Math.sin(zRad), 0, 0,
       Math.sin(zRad), Math.cos(zRad), 0, 0,
       0, 0, 1, 0,
@@ -85,7 +85,7 @@ export class Matrix4x4 {
   }
 
   scaling(s){
-    return new  Matrix4x4(
+    return new Matrix4x4(
       s.x, 0, 0, 0,
       0, s.y, 0, 0,
       0, 0, s.z, 0,

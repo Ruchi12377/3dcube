@@ -21,11 +21,9 @@ export class Renderer {
     this.drawUI = drawUI;
 
     //デプスのコピー元の配列を初期化
-    this.depthEmpty = new Uint8ClampedArray(
-      this.canvasWidth * this.canvasHeight
-    );
+    this.depthEmpty = new Uint16Array(this.canvasWidth * this.canvasHeight);
     for (let i = 0; i < this.depthEmpty.length; i++) {
-      this.depthEmpty[i] = 255;
+      this.depthEmpty[i] = 65535;
     }
 
     this.directionalLight = new Vector3(0.3, 0.1, 0.7);
@@ -228,20 +226,24 @@ export class Renderer {
           ) {
             //x2 == x1のときは0で割ることになるので
             const z = z1 + (x - x1) * kz;
-            const zUInt8 = parseInt(
+            const zUInt16 = parseInt(
               Mathf.clamp(
                 (z - this.camera.nearClip) /
                   (this.camera.farClip - this.camera.nearClip),
                 0,
                 1
-              ) * 255
+              ) * 65535
             );
             if (z < this.camera.nearClip || z > this.camera.farClip) continue;
 
             const index = y * this.canvasWidth + x;
 
             //描画しようとしているピクセルが、奥にある場合
-            if (x < 0 || x >= this.canvasWidth || zUInt8 > depthBuffer[index]) {
+            if (
+              x < 0 ||
+              x >= this.canvasWidth ||
+              zUInt16 > depthBuffer[index]
+            ) {
               continue;
             }
 
@@ -260,7 +262,7 @@ export class Renderer {
             }
 
             //手前にあるのでデプスを更新
-            depthBuffer[index] = zUInt8;
+            depthBuffer[index] = zUInt16;
 
             //lightに関しての定数kなのでkl
             const nx =

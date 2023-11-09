@@ -38,7 +38,7 @@ export class Matrix4x4 {
     )
   }
 
-  translation(t){
+  static translation(t){
     return new Matrix4x4(
       1, 0, 0, t.x,
       0, 1, 0, t.y,
@@ -47,14 +47,14 @@ export class Matrix4x4 {
     );
   }
 
-  rotation(r) {
+  static rotation(r) {
     const matX = this.rotationX(r.x);
     const matY = this.rotationY(r.y);
     const matZ = this.rotationZ(r.z);
     return matY.multiply(matX.multiply(matZ))
   }
   
-  rotationX(x) {
+  static rotationX(x) {
     const xRad = Mathf.toRad(-x);
     return new Matrix4x4(
       1, 0, 0, 0,
@@ -64,7 +64,7 @@ export class Matrix4x4 {
     );
   }
 
-  rotationY(y) {
+  static rotationY(y) {
     const yRad = Mathf.toRad(y);
     return new Matrix4x4(
       Math.cos(yRad), 0, Math.sin(yRad), 0,
@@ -74,7 +74,7 @@ export class Matrix4x4 {
     );
   }
 
-  rotationZ(z) {
+  static rotationZ(z) {
     const zRad = Mathf.toRad(-z);
     return new Matrix4x4(
       Math.cos(zRad), -Math.sin(zRad), 0, 0,
@@ -84,7 +84,7 @@ export class Matrix4x4 {
     );
   }
 
-  scaling(s){
+  static scaling(s){
     return new Matrix4x4(
       s.x, 0, 0, 0,
       0, s.y, 0, 0,
@@ -94,9 +94,9 @@ export class Matrix4x4 {
   }
 
   setTRS(t, r, s) {
-    const tMat = this.translation(t);
-    const rMat = this.rotation(r);
-    const sMat = this.scaling(s);
+    const tMat = Matrix4x4.translation(t);
+    const rMat = Matrix4x4.rotation(r);
+    const sMat = Matrix4x4.scaling(s);
 
     //拡大、ZXYの回転、平行の順番でかける
     const mat = tMat.multiply(rMat.multiply(sMat));

@@ -308,8 +308,7 @@ export class Renderer {
   }
 
   modelNormal(normals, geometry) {
-    const mat = Matrix4x4.identity;
-    mat.rotation(geometry.rot);
+    const mat = Matrix4x4.rotation(geometry.rot);
     const modeledNormals = new Array(normals.length);
 
     //ノーマル

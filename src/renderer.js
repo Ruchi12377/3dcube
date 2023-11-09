@@ -344,45 +344,22 @@ export class Renderer {
   //透視投影変換を用いて3次元の頂点を2次元の画面に変換する
   project(vertices) {
     const projectedVertices = new Array(vertices.length);
-    //カメラの視野
-    const f = 1 / Math.tan(Mathf.toRad(this.camera.viewableAngle / 2));
-    const a =
-      (this.canvasWidth > this.canvasHeight
-        ? this.canvasWidth
-        : this.canvasHeight) / 2;
-    const q =
-      this.camera.farClip / (this.camera.farClip - this.camera.nearClip);
 
     for (let i = 0; i < vertices.length; i++) {
       const p = vertices[i];
-      //以下の式を行列に直したもの
-      // const f = 1 / Math.tan(Mathf.toRad(ViewableAngle / 2));
-      // const x = (a * f * p.x) / p.z + CanvasWidth / 2;
-      // const y = (a * f * p.y) / p.z + CanvasHeight / 2;
-      // const z = p.z * q - NearClip * q;
-      // const w = p.z;
-      const mat = new Matrix4x4(
-        -a * f,
-        0,
-        this.canvasWidth / 2,
-        0,
-        0,
-        a * f,
-        this.canvasHeight / 2,
-        0,
-        0,
-        0,
-        q,
-        -this.camera.nearClip * q,
-        0,
-        0,
-        1,
-        0
+
+      const projectMat = Matrix4x4.projection(
+        this.camera.viewableAngle,
+        this.canvasHeight,
+        this.canvasWidth,
+        this.camera.farClip,
+        this.camera.nearClip
       );
 
-      const p4 = mat.multiplyVector(new Vector4(p.x, p.y, p.z, 1));
-      p4.x /= p4.w;
-      p4.y /= p4.w;
+      const p4 = projectMat.multiplyVector(new Vector4(p.x, p.y, p.z, 1));
+      p4.x = (-p4.x / p4.w + 1) * this.canvasWidth;
+      p4.y = (p4.y / p4.w + 1) * this.canvasHeight;
+
       projectedVertices[i] = p4;
     }
 

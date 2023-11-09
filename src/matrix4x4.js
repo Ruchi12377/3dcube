@@ -93,6 +93,27 @@ export class Matrix4x4 {
     );
   }
 
+  static projection(angle, windowWidth, windowHeight, farClip, nearClip) {
+    const f = 1 / Math.tan(Mathf.toRad(angle / 2));
+    const a = windowHeight / windowWidth;
+    //カメラの視野
+    const q = farClip / (farClip - nearClip);
+
+    return new Matrix4x4(
+      a * f, 0, 0, 0,
+      0, f, 0, 0,
+      0, 0, q, -nearClip * q,
+      0, 0, 1, 0
+    );
+  }
+
+  static viewport(pVertex, windowWidth, windowHeight) {
+    pVertex.x = pVertex.x / pVertex.w + windowWidth * 0.5;
+    pVertex.y = pVertex.y / pVertex.w + windowHeight * 0.5;
+
+    return pVertex;
+  }
+
   setTRS(t, r, s) {
     const tMat = Matrix4x4.translation(t);
     const rMat = Matrix4x4.rotation(r);

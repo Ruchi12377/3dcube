@@ -226,15 +226,8 @@ export class Renderer {
           ) {
             //x2 == x1のときは0で割ることになるので
             const z = z1 + (x - x1) * kz;
-            const zUInt16 = parseInt(
-              Mathf.clamp(
-                (z - this.camera.nearClip) /
-                  (this.camera.farClip - this.camera.nearClip),
-                0,
-                1
-              ) * 65535
-            );
-            if (z < this.camera.nearClip || z > this.camera.farClip) continue;
+            const zUInt16 = parseInt(Mathf.clamp(z, 0, 1) * 65535);
+            if (z < 0 || z > 1) continue;
 
             const index = y * this.canvasWidth + x;
 
@@ -345,21 +338,29 @@ export class Renderer {
   project(vertices) {
     const projectedVertices = new Array(vertices.length);
 
+    const projectMat = Matrix4x4.projection(
+      this.camera.viewableAngle,
+      this.canvasHeight,
+      this.canvasWidth,
+      this.camera.farClip,
+      this.camera.nearClip
+    );
+
     for (let i = 0; i < vertices.length; i++) {
       const p = vertices[i];
 
-      const projectMat = Matrix4x4.projection(
-        this.camera.viewableAngle,
-        this.canvasHeight,
-        this.canvasWidth,
-        this.camera.farClip,
-        this.camera.nearClip
-      );
-
       const p4 = projectMat.multiplyVector(new Vector4(p.x, p.y, p.z, 1));
-      p4.x = (-p4.x / p4.w + 1) * this.canvasWidth;
-      p4.y = (p4.y / p4.w + 1) * this.canvasHeight;
 
+      //ここはビューポート変換
+      //X, Y軸それぞれ反転しているので反転する必要がある
+      //しかし、JavaScriptのCanvasのYがすでに反転しているため、ここでは反転しない
+      //w除算で-1 ~ 1にする
+      //x, yは+1することで0 ~ 2にして、
+      //0.5をかけて0 ~ 1にして縦横の大きさを掛けることで
+      //0 ~ width, 0 ~ heightにしている。
+      p4.x = (-p4.x / p4.w + 1) * 0.5 * this.canvasWidth;
+      p4.y = (p4.y / p4.w + 1) * 0.5 * this.canvasHeight;
+      p4.z = p4.z / p4.w;
       projectedVertices[i] = p4;
     }
 

@@ -19,7 +19,7 @@
 
 ## Reference
 ### javidx9
-- [Part1](https://youtu.be/ih20l3pJoeU) Draw triangle(Transration, scalling, and rotation matrix) and Project matrix, viewport transration.
+- [Part1](https://youtu.be/ih20l3pJoeU) Draw triangle(Transration, scalling, and rotation matrix), Project matrix and viewport transration.
 - [Part2](https://youtu.be/XgMWc6LumG4) Normals, Culling, Lghting and Object file(.obj).
 - [Part3](https://youtu.be/HXSuNxpCzdM) Cameras and Clipping
 - [Part4](https://youtu.be/nBzCS-Y0FcY) Texturing and Depth Buffers(Draw triangles in right order with depth.)

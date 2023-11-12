@@ -53,6 +53,8 @@ export class ObjFile {
           }
         }
 
+        this.checkFaces();
+
         if (loaded) {
           loaded();
         }
@@ -60,5 +62,39 @@ export class ObjFile {
     };
 
     xhr.send();
+  }
+
+  checkFaces() {
+    for (let i = 0; i < this.faces.length; i++) {
+      const face = this.faces[i];
+      const vCount = face.length;
+
+      //三角形なら処理しなくて良い
+      if (vCount == 3) continue;
+
+      //それぞれの要素にvIndexが入ってるので、それを取り出して配列にする
+      this.divisionFace(face);
+    }
+  }
+
+  divisionFace(face) {
+    let previous = 0;
+    //-1にすることで、最初にmoveToNextをしたときにcurrentが0になる
+    let current = -1;
+    let next = 0;
+    const leftVertices = structuredClone(this.vertices);
+    //それぞれの値を設定する
+    [previous, current, next] = this.moveToNext(previous, current, next, leftVertices.length);
+
+    console.log(leftVertices.length);
+    console.log(previous + ":" + current + ":" + next);
+  }
+
+  moveToNext(previous, current, next, leftVertexCount) {
+    current = (current + 1) % leftVertexCount;
+    next = (current + 1) % leftVertexCount;
+    previous = current - 1 >= 0 ? current - 1 : leftVertexCount - 1;
+
+    return [previous, current, next];
   }
 }

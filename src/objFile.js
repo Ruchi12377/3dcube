@@ -82,12 +82,26 @@ export class ObjFile {
     //-1にすることで、最初にmoveToNextをしたときにcurrentが0になる
     let current = -1;
     let next = 0;
-    const leftVertices = structuredClone(this.vertices);
+    console.log(face);
+    const leftVertices = structuredClone(face);
     //それぞれの値を設定する
     [previous, current, next] = this.moveToNext(previous, current, next, leftVertices.length);
 
-    console.log(leftVertices.length);
-    console.log(previous + ":" + current + ":" + next);
+    const previousVetex = this.vertices[leftVertices[previous].vIndex];
+    const currentVetex = this.vertices[leftVertices[current].vIndex];
+    const nextVetex = this.vertices[leftVertices[next].vIndex];
+
+    console.log(previousVetex + ":" + currentVetex + ":" + nextVetex);
+
+    const a = previousVetex.copy();
+    a.minus(currentVetex);
+    const b = nextVetex.copy();
+    b.minus(currentVetex);
+
+    console.log(a + ":" + b);
+
+    const c = a.cross(b);
+    console.log(c);
   }
 
   moveToNext(previous, current, next, leftVertexCount) {

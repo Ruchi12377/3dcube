@@ -118,25 +118,6 @@ arrow3dFile.loadFromObjFile("./arrow3d.obj", () => {
   engine.geometries.push(arrow3d);
 });
 
-const quadFile = new ObjFile();
-quadFile.loadFromObjFile("./complex.obj", () => {
-  const quad = new Geometry(
-    new Vector3(0, 0, 5),
-    new Vector3(0, 0, 0),
-    new Vector3(1, 1, 1),
-    quadFile.vertices,
-    quadFile.uvs,
-    quadFile.normals,
-    quadFile.faces,
-    standard
-  );
-
-  // console.log(quad.vertices);
-  // console.log(quad.faces);
-
-  engine.geometries.push(quad);
-});
-
 window.onload = () => {
   engine.start();
   fps = Time.fps;

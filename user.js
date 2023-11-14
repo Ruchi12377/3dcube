@@ -26,7 +26,14 @@ const camera = new Camera(
   new Vector3(0, 0, 0)
 );
 
-const engine = new Engine(CanvasWidth, CanvasHeight, camera, update, drawUI);
+const engine = new Engine(
+  CanvasWidth,
+  CanvasHeight,
+  camera,
+  update,
+  drawUI,
+  false
+);
 let fps = 0;
 let latestTime = 0;
 
@@ -111,6 +118,25 @@ arrow3dFile.loadFromObjFile("./arrow3d.obj", () => {
   engine.geometries.push(arrow3d);
 });
 
+const quadFile = new ObjFile();
+quadFile.loadFromObjFile("./complex.obj", () => {
+  const quad = new Geometry(
+    new Vector3(0, 0, 5),
+    new Vector3(0, 0, 0),
+    new Vector3(1, 1, 1),
+    quadFile.vertices,
+    quadFile.uvs,
+    quadFile.normals,
+    quadFile.faces,
+    standard
+  );
+
+  // console.log(quad.vertices);
+  // console.log(quad.faces);
+
+  engine.geometries.push(quad);
+});
+
 window.onload = () => {
   engine.start();
   fps = Time.fps;
@@ -172,6 +198,10 @@ function update() {
   }
   if (Input.getKey(KeyCode.KeyS)) {
     moveZ -= speed;
+  }
+
+  if (Input.getKeyDown(KeyCode.KeyP)) {
+    engine.render.wireFrame ^= true;
   }
 
   const xVec = camera.right;

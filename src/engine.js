@@ -3,7 +3,14 @@ import { Renderer } from "./renderer.js";
 import { Time } from "./time.js";
 
 export class Engine {
-  constructor(canvasWidth, canvasHeight, camera, userUpdate, userDrawUI) {
+  constructor(
+    canvasWidth,
+    canvasHeight,
+    camera,
+    userUpdate,
+    userDrawUI,
+    wireFrame
+  ) {
     this.canvasWidth = canvasWidth;
     this.canvasHeight = canvasHeight;
 
@@ -12,11 +19,12 @@ export class Engine {
     this.userUpdate = userUpdate;
     this.userDrawUI = userDrawUI;
 
-    this.rederer = new Renderer(
+    this.render = new Renderer(
       this.canvasWidth,
       this.canvasHeight,
       this.camera,
-      this.userDrawUI
+      this.userDrawUI,
+      wireFrame
     );
 
     this.geometries = [];
@@ -25,7 +33,7 @@ export class Engine {
 
   start() {
     Input.start();
-    this.rederer.start();
+    this.render.start();
     this.bindedUpdate();
   }
 
@@ -38,21 +46,7 @@ export class Engine {
       this.userUpdate();
     }
 
-    // function getCanvasPixelColor(uv) {
-    //   const x = parseInt(parseInt(uv.x) % CanvasWidth);
-    //   const y = parseInt(parseInt(uv.y) % CanvasHeight);
-
-    //   const color32 = data[y * CanvasWidth + x];
-
-    //   const alpha = (color32 >> 24) & 0xff;
-    //   const blue = (color32 >> 16) & 0xff;
-    //   const green = (color32 >> 8) & 0xff;
-    //   const red = color32 & 0xff;
-
-    //   return new Color(red, green, blue, alpha);
-    // }
-
-    this.rederer.render(this.geometries);
+    this.render.render(this.geometries);
 
     requestAnimationFrame(this.bindedUpdate);
   }

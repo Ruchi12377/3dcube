@@ -66,8 +66,12 @@ export class Vector3 {
     return this.x * v.x + this.y * v.y + this.z * v.z;
   }
 
+  magnitude() {
+    return this.x * this.x + this.y * this.y + this.z * this.z;
+  }
+
   sqrtMagnitude() {
-    return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
+    return Math.sqrt(this.magnitude());
   }
 
   //正規化を行う
@@ -81,6 +85,25 @@ export class Vector3 {
     v.normalize();
 
     return v;
+  }
+
+  distance(v) {
+    const dx = this.x - v.x;
+    const dy = this.y - v.y;
+    const dz = this.z - v.z;
+
+    return Math.sqrt(dx * dx + dy * dy + dz * dz);
+  }
+
+  //ベクトル同士の角度(ラジアン)を返す
+  //0 ~ 180となる(最小の角度)
+  angle(v) {
+    const d = this.dot(v);
+    const magnitudeA = this.sqrtMagnitude();
+    const magnitudeB = v.sqrtMagnitude();
+    const cosTheta = d / (magnitudeA * magnitudeB);
+
+    return Math.acos(cosTheta);
   }
 
   toString() {

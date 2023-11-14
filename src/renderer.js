@@ -54,7 +54,9 @@ export class Renderer {
   render(geometries) {
     if (this.camera == undefined) return;
 
-    this.context.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+    if (this.wireFrame) {
+      this.context.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+    }
 
     this.buf = structuredClone(this.defaultBuf);
     this.buf8 = new Uint8ClampedArray(this.buf);
@@ -131,23 +133,15 @@ export class Renderer {
           // this.context.fillText(face[2].vIndex, pDraw3.x, pDraw3.y);
         } else {
           //vertices sortedの略
-          let vs = [
-            [
-              pVertices[face[0].vIndex],
-              geometry.uvs[face[0].uvIndex],
-              mNormals[face[0].nIndex],
-            ],
-            [
-              pVertices[face[1].vIndex],
-              geometry.uvs[face[1].uvIndex],
-              mNormals[face[1].nIndex],
-            ],
-            [
-              pVertices[face[2].vIndex],
-              geometry.uvs[face[2].uvIndex],
-              mNormals[face[2].nIndex],
-            ],
-          ];
+          let vs = [];
+          for (let j = 0; j < 3; j++) {
+            vs.push([
+              pVertices[face[j].vIndex],
+              geometry.uvs[face[j].uvIndex],
+              mNormals[face[j].nIndex],
+            ]);
+          }
+
           //小さい順に並べる
           vs.sort((a, b) => (a[0].y < b[0].y ? -1 : 1));
           const uvs = [vs[0][1].copy(), vs[1][1].copy(), vs[2][1].copy()];
@@ -157,18 +151,15 @@ export class Renderer {
           vs = vs.map((x) => x[0]);
 
           for (let j = 0; j < 3; j++) {
-            uvs[j] = new Vector3(
-              uvs[j].x / vs[j].w,
-              uvs[j].y / vs[j].w,
-              1 / vs[j].w
-            );
+            uvs[j] = new Vector3(uvs[j].x, uvs[j].y, 1);
+            uvs[j].division(vs[j].w);
           }
 
           for (let y = parseInt(Math.ceil(vs[0].y)); y < vs[2].y; y++) {
             if (y < 0 || y >= this.canvasHeight) continue;
 
             const p = Math.abs(vs[0].y - vs[1].y) < 0.1 || y >= vs[1].y ? 1 : 0;
-            let x1 = Mathf.clamp(
+            const x1 = Mathf.clamp(
               vs[p].x,
               vs[p + 1].x,
               vs[p].x +
@@ -180,7 +171,7 @@ export class Renderer {
               ((y - vs[p].y) * (vs[p + 1].z - vs[p].z)) /
                 (vs[p + 1].y - vs[p].y);
 
-            let x2 = Mathf.clamp(
+            const x2 = Mathf.clamp(
               vs[0].x,
               vs[2].x,
               vs[0].x +
@@ -266,10 +257,8 @@ export class Renderer {
               let u = x2 == x1 ? u1 : u1 + ((x - x1) * (u2 - u1)) / (x2 - x1);
               let v = x2 == x1 ? v1 : v1 + ((x - x1) * (v2 - v1)) / (x2 - x1);
               let w = x2 == x1 ? w1 : w1 + ((x - x1) * (w2 - w1)) / (x2 - x1);
-              u /= w;
-              v /= w;
-              u = Mathf.clamp(u, 0, 1); // 計算誤差対策
-              v = 1 - Mathf.clamp(v, 0, 1);
+              u = Mathf.clamp(u / w, 0, 1); // 計算誤差対策
+              v = 1 - Mathf.clamp(v / w, 0, 1);
               const color = shader(u, v);
 
               if (color instanceof Color == false) {

@@ -26,7 +26,14 @@ const camera = new Camera(
   new Vector3(0, 0, 0)
 );
 
-const engine = new Engine(CanvasWidth, CanvasHeight, camera, update, drawUI);
+const engine = new Engine(
+  CanvasWidth,
+  CanvasHeight,
+  camera,
+  update,
+  drawUI,
+  false
+);
 let fps = 0;
 let latestTime = 0;
 
@@ -63,56 +70,56 @@ function standardArrow(u, v) {
 }
 
 let bunny;
-// const bunnyFile = new ObjFile();
-// bunnyFile.loadFromObjFile("./bunny.obj", () => {
-//   bunny = new Geometry(
-//     new Vector3(0, 0, 2),
-//     new Vector3(0, 0, 0),
-//     new Vector3(1, 1, 1),
-//     bunnyFile.vertices,
-//     bunnyFile.uvs,
-//     bunnyFile.normals,
-//     bunnyFile.faces,
-//     dissolve
-//   );
+const bunnyFile = new ObjFile();
+bunnyFile.loadFromObjFile("./bunny.obj", () => {
+  bunny = new Geometry(
+    new Vector3(0, 0, 2),
+    new Vector3(0, 0, 0),
+    new Vector3(1, 1, 1),
+    bunnyFile.vertices,
+    bunnyFile.uvs,
+    bunnyFile.normals,
+    bunnyFile.faces,
+    dissolve
+  );
 
-//   engine.geometries.push(bunny);
-// });
+  engine.geometries.push(bunny);
+});
 
-// const arrowFile = new ObjFile();
-// arrowFile.loadFromObjFile("./arrow.obj", () => {
-//   const arrow = new Geometry(
-//     new Vector3(0, 2, 2),
-//     new Vector3(0, 0, 180),
-//     new Vector3(0.1, 0.1, 0.1),
-//     arrowFile.vertices,
-//     arrowFile.uvs,
-//     arrowFile.normals,
-//     arrowFile.faces,
-//     standard
-//   );
+const arrowFile = new ObjFile();
+arrowFile.loadFromObjFile("./arrow.obj", () => {
+  const arrow = new Geometry(
+    new Vector3(0, 2, 2),
+    new Vector3(0, 0, 180),
+    new Vector3(0.1, 0.1, 0.1),
+    arrowFile.vertices,
+    arrowFile.uvs,
+    arrowFile.normals,
+    arrowFile.faces,
+    standard
+  );
 
-//   engine.geometries.push(arrow);
-// });
+  engine.geometries.push(arrow);
+});
 
-// const arrow3dFile = new ObjFile();
-// arrow3dFile.loadFromObjFile("./arrow3d.obj", () => {
-//   const arrow3d = new Geometry(
-//     new Vector3(0, 0, 0),
-//     new Vector3(0, 0, 0),
-//     new Vector3(1, 1, 1),
-//     arrow3dFile.vertices,
-//     arrow3dFile.uvs,
-//     arrow3dFile.normals,
-//     arrow3dFile.faces,
-//     standardArrow
-//   );
+const arrow3dFile = new ObjFile();
+arrow3dFile.loadFromObjFile("./arrow3d.obj", () => {
+  const arrow3d = new Geometry(
+    new Vector3(0, 0, 0),
+    new Vector3(0, 0, 0),
+    new Vector3(1, 1, 1),
+    arrow3dFile.vertices,
+    arrow3dFile.uvs,
+    arrow3dFile.normals,
+    arrow3dFile.faces,
+    standardArrow
+  );
 
-//   engine.geometries.push(arrow3d);
-// });
+  engine.geometries.push(arrow3d);
+});
 
 const quadFile = new ObjFile();
-quadFile.loadFromObjFile("./quad.obj", () => {
+quadFile.loadFromObjFile("./complex.obj", () => {
   const quad = new Geometry(
     new Vector3(0, 0, 5),
     new Vector3(0, 0, 0),
@@ -123,6 +130,9 @@ quadFile.loadFromObjFile("./quad.obj", () => {
     quadFile.faces,
     standard
   );
+
+  // console.log(quad.vertices);
+  // console.log(quad.faces);
 
   engine.geometries.push(quad);
 });
@@ -188,6 +198,10 @@ function update() {
   }
   if (Input.getKey(KeyCode.KeyS)) {
     moveZ -= speed;
+  }
+
+  if (Input.getKeyDown(KeyCode.KeyP)) {
+    engine.render.wireFrame ^= true;
   }
 
   const xVec = camera.right;

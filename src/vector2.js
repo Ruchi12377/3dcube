@@ -1,3 +1,5 @@
+import { Mathf } from "./math.js";
+
 export class Vector2 {
   constructor(x, y) {
     this.x = Number(x);
@@ -35,6 +37,10 @@ export class Vector2 {
 
   dot(v) {
     return this.x * v.x + this.y * v.y;
+  }
+
+  lerp(v, t) {
+    return new Vector2(Mathf.lerp(this.x, v.x, t), Mathf.lerp(this.y, v.y, t));
   }
 
   sqrtMagnitude() {

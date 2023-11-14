@@ -1,3 +1,5 @@
+import { Mathf } from "./math.js";
+
 export class Vector3 {
   constructor(x, y, z) {
     this.x = Number(x);
@@ -64,6 +66,14 @@ export class Vector3 {
   //内積
   dot(v) {
     return this.x * v.x + this.y * v.y + this.z * v.z;
+  }
+
+  lerp(v, t) {
+    return new Vector3(
+      Mathf.lerp(this.x, v.x, t),
+      Mathf.lerp(this.y, v.y, t),
+      Mathf.lerp(this.z, v.z, t)
+    );
   }
 
   magnitude() {

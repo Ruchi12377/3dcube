@@ -14,4 +14,12 @@ export class Mathf {
   static sign(n) {
     return n >= 0 ? 1 : -1;
   }
+
+  static lerp(a, b, t) {
+    return a + (b - a) * Mathf.clamp(t, 0, 1);
+  }
+
+  static invLerp(a, b, t) {
+    return Mathf.clamp((t - a) / (b - a), 0, 1);
+  }
 }

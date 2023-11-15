@@ -16,7 +16,9 @@
 - UVタイリング、オフセット
 - カメラの視錐台のクリップ
 
-## Known Issues
+## Known Issue
+
+- カメラと逆向きから見るとデプスが機能しない
 
 ## Reference
 

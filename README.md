@@ -18,8 +18,6 @@
 
 ## Known Issue
 
-- カメラと逆向きから見るとデプスが機能しない
-
 ## Reference
 
 ### javidx9

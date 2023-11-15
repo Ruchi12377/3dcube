@@ -159,72 +159,26 @@ export class Renderer {
             if (y < 0 || y >= this.canvasHeight) continue;
 
             const p = Math.abs(vs[0].y - vs[1].y) < 0.1 || y >= vs[1].y ? 1 : 0;
-            const x1 = Mathf.clamp(
-              vs[p].x,
-              vs[p + 1].x,
-              vs[p].x +
-                ((y - vs[p].y) * (vs[p + 1].x - vs[p].x)) /
-                  (vs[p + 1].y - vs[p].y)
-            );
-            const z1 =
-              vs[p].z +
-              ((y - vs[p].y) * (vs[p + 1].z - vs[p].z)) /
-                (vs[p + 1].y - vs[p].y);
+            const ky1 = Mathf.invLerp(vs[p].y, vs[p + 1].y, y);
+            const ky2 = Mathf.invLerp(vs[0].y, vs[2].y, y);
+            const x1 = Mathf.lerp(vs[p].x, vs[p + 1].x, ky1);
+            const z1 = Mathf.lerp(vs[p].z, vs[p + 1].z, ky1);
+            const x2 = Mathf.lerp(vs[0].x, vs[2].x, ky2);
+            const z2 = Mathf.lerp(vs[0].z, vs[2].z, ky2);
 
-            const x2 = Mathf.clamp(
-              vs[0].x,
-              vs[2].x,
-              vs[0].x +
-                ((y - vs[0].y) * (vs[2].x - vs[0].x)) / (vs[2].y - vs[0].y)
-            );
-            const z2 =
-              vs[0].z +
-              ((y - vs[0].y) * (vs[2].z - vs[0].z)) / (vs[2].y - vs[0].y);
+            const u1 = Mathf.lerp(uvs[p].x, uvs[p + 1].x, ky1);
+            const v1 = Mathf.lerp(uvs[p].y, uvs[p + 1].y, ky1);
+            const w1 = Mathf.lerp(uvs[p].z, uvs[p + 1].z, ky1);
+            const u2 = Mathf.lerp(uvs[0].x, uvs[2].x, ky2);
+            const v2 = Mathf.lerp(uvs[0].y, uvs[2].y, ky2);
+            const w2 = Mathf.lerp(uvs[0].z, uvs[2].z, ky2);
 
-            const u1 =
-              uvs[p].x +
-              ((y - vs[p].y) * (uvs[p + 1].x - uvs[p].x)) /
-                (vs[p + 1].y - vs[p].y);
-            const v1 =
-              uvs[p].y +
-              ((y - vs[p].y) * (uvs[p + 1].y - uvs[p].y)) /
-                (vs[p + 1].y - vs[p].y);
-            const w1 =
-              uvs[p].z +
-              ((y - vs[p].y) * (uvs[p + 1].z - uvs[p].z)) /
-                (vs[p + 1].y - vs[p].y);
-
-            const u2 =
-              uvs[0].x +
-              ((y - vs[0].y) * (uvs[2].x - uvs[0].x)) / (vs[2].y - vs[0].y);
-            const v2 =
-              uvs[0].y +
-              ((y - vs[0].y) * (uvs[2].y - uvs[0].y)) / (vs[2].y - vs[0].y);
-            const w2 =
-              uvs[0].z +
-              ((y - vs[0].y) * (uvs[2].z - uvs[0].z)) / (vs[2].y - vs[0].y);
-
-            const nx1 =
-              pns[p].x +
-              ((y - vs[p].y) * (pns[p + 1].x - pns[p].x)) /
-                (vs[p + 1].y - vs[p].y);
-            const ny1 =
-              pns[p].y +
-              ((y - vs[p].y) * (pns[p + 1].y - pns[p].y)) /
-                (vs[p + 1].y - vs[p].y);
-            const nz1 =
-              pns[p].z +
-              ((y - vs[p].y) * (pns[p + 1].z - pns[p].z)) /
-                (vs[p + 1].y - vs[p].y);
-            const nx2 =
-              pns[0].x +
-              ((y - vs[0].y) * (pns[2].x - pns[0].x)) / (vs[2].y - vs[0].y);
-            const ny2 =
-              pns[0].y +
-              ((y - vs[0].y) * (pns[2].y - pns[0].y)) / (vs[2].y - vs[0].y);
-            const nz2 =
-              pns[0].z +
-              ((y - vs[0].y) * (pns[2].z - pns[0].z)) / (vs[2].y - vs[0].y);
+            const nx1 = Mathf.lerp(pns[p].x, pns[p + 1].x, ky1);
+            const ny1 = Mathf.lerp(pns[p].y, pns[p + 1].y, ky1);
+            const nz1 = Mathf.lerp(pns[p].z, pns[p + 1].z, ky1);
+            const nx2 = Mathf.lerp(pns[0].x, pns[2].x, ky2);
+            const ny2 = Mathf.lerp(pns[0].y, pns[2].y, ky2);
+            const nz2 = Mathf.lerp(pns[0].z, pns[2].z, ky2);
 
             //事前計算したほうが早いので
             //x1 == x2のときは
@@ -239,7 +193,7 @@ export class Renderer {
               x++
             ) {
               //x2 == x1のときは0で割ることになるので
-              const z = z1 + (x - x1) * kz;
+              const z = Mathf.lerp(z1, z2, kz);
               const zUInt16 = parseInt(Mathf.clamp(z * 65535, 0, 65535));
               if (z < 0 || z > 1) continue;
 

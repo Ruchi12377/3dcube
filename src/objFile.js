@@ -99,10 +99,7 @@ export class ObjFile {
       leftVertices.length
     );
 
-    let aaaa = 20;
-    while (leftVertices.length > 3 && aaaa > 0) {
-      aaaa -= 1;
-
+    while (leftVertices.length > 3) {
       const previousVIndex = leftVertices[previous].vIndex;
       const currentVIndex = leftVertices[current].vIndex;
       const nextVIndex = leftVertices[next].vIndex;

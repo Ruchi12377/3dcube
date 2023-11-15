@@ -4,6 +4,9 @@
 
 [Click here!](https://ruchi12377.github.io/3dcube)
 
+## How It Works?
+[Click here!](./HowItWorks.md)
+
 ## Future
 
 - FXAA (アンチエイリアス)

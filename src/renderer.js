@@ -2,7 +2,6 @@ import { Color } from "./color.js";
 import { Mathf } from "./math.js";
 import { Matrix4x4 } from "./matrix4x4.js";
 import { Vector3 } from "./vector3.js";
-import { Vector4 } from "./vector4.js";
 
 export class Renderer {
   constructor(canvasWidth, canvasHeight, camera, drawUI, wireFrame) {
@@ -65,21 +64,12 @@ export class Renderer {
     const depthBuffer = structuredClone(this.depthEmpty);
 
     for (let i = 0; i < geometries.length; i++) {
-      let geometry = geometries[i];
+      const geometry = geometries[i];
       const shader = geometry.pixelShader;
 
       //頂点とノーマルのY軸反転
-      const vertices = geometry.copiedVertices();
-      for (let j = 0; j < vertices.length; j++) {
-        const v = vertices[j];
-        vertices[j] = new Vector3(v.x, -v.y, v.z);
-      }
-
-      const normals = geometry.copiedNormals();
-      for (let j = 0; j < normals.length; j++) {
-        const n = normals[j];
-        normals[j] = new Vector3(n.x, -n.y, n.z);
-      }
+      const vertices = geometry.copiedVertices().map(v => new Vector3(v.x, -v.y, v.z));
+      const normals = geometry.copiedNormals().map(n => new Vector3(n.x, -n.y, n.z));
 
       const mVertices = this.model(vertices, geometry);
       const vVertices = this.view(mVertices, this.camera.pos, this.camera.rot);
@@ -180,20 +170,14 @@ export class Renderer {
             const ny2 = Mathf.lerp(pns[0].y, pns[2].y, ky2);
             const nz2 = Mathf.lerp(pns[0].z, pns[2].z, ky2);
 
-            //事前計算したほうが早いので
-            //x1 == x2のときは
-            //z1 + (x - x1) * 0 = z1
-            //それ以外は
-            //z1 + (x - x1) * kzなので
-            const kz = x1 == x2 ? 0 : (z2 - z1) / (x2 - x1);
-
             for (
               let x = parseInt(Math.floor(Math.min(x1, x2)));
               x < Math.ceil(Math.max(x1, x2));
               x++
             ) {
               //x2 == x1のときは0で割ることになるので
-              const z = Mathf.lerp(z1, z2, kz);
+              const kx = Mathf.invLerp(x1, x2, x);
+              const z = Mathf.lerp(z1, z2, kx);
               const zUInt16 = parseInt(Mathf.clamp(z * 65535, 0, 65535));
               if (z < 0 || z > 1) continue;
 
@@ -208,11 +192,9 @@ export class Renderer {
                 continue;
               }
 
-              let u = x2 == x1 ? u1 : u1 + ((x - x1) * (u2 - u1)) / (x2 - x1);
-              let v = x2 == x1 ? v1 : v1 + ((x - x1) * (v2 - v1)) / (x2 - x1);
-              let w = x2 == x1 ? w1 : w1 + ((x - x1) * (w2 - w1)) / (x2 - x1);
-              u = Mathf.clamp(u / w, 0, 1); // 計算誤差対策
-              v = 1 - Mathf.clamp(v / w, 0, 1);
+              const w = Mathf.lerp(w1, w2, kx);
+              const u = Mathf.lerp(u1, u2, kx) / w;
+              const v = 1 - Mathf.lerp(v1, v2, kx) / w;
               const color = shader(u, v);
 
               if (color instanceof Color == false) {
@@ -224,12 +206,9 @@ export class Renderer {
               depthBuffer[index] = zUInt16;
 
               //lightに関しての定数kなのでkl
-              const nx =
-                x2 == x1 ? nx1 : nx1 + ((x - x1) * (nx2 - nx1)) / (x2 - x1);
-              const ny =
-                x2 == x1 ? ny1 : ny1 + ((x - x1) * (ny2 - ny1)) / (x2 - x1);
-              const nz =
-                x2 == x1 ? nz1 : nz1 + ((x - x1) * (nz2 - nz1)) / (x2 - x1);
+              const nx = Mathf.lerp(nx1, nx2, kx);
+              const ny = Mathf.lerp(ny1, ny2, kx);
+              const nz = Mathf.lerp(nz1, nz2, kx);
               const kl = this.lightDirectness(new Vector3(nx, ny, nz));
               this.data[index] = color.shadedColor(kl).toColor32();
             }
@@ -261,9 +240,8 @@ export class Renderer {
     //拡大縮小、頂点の回転、平行移動
     for (let i = 0; i < vertices.length; i++) {
       const v = vertices[i];
-      const m = mat.multiplyVector(new Vector4(v.x, v.y, v.z, 1));
-
-      modeledVertices[i] = new Vector3(m.x, m.y, m.z);
+      const m = mat.multiplyVector(v.toVector4(1));
+      modeledVertices[i] = m.toVector3();
     }
 
     return modeledVertices;
@@ -277,9 +255,8 @@ export class Renderer {
     //頂点の回転
     for (let i = 0; i < normals.length; i++) {
       const n = normals[i];
-      const m = mat.multiplyVector(new Vector4(n.x, n.y, n.z, 1));
-
-      modeledNormals[i] = new Vector3(m.x, m.y, m.z);
+      const m = mat.multiplyVector(n.toVector4(1));
+      modeledNormals[i] = m.toVector3();
     }
 
     return modeledNormals;
@@ -290,14 +267,14 @@ export class Renderer {
     let mat = Matrix4x4.identity;
     const posXYInv = new Vector3(-camPos.x, -camPos.y, camPos.z);
     const rotYInv = new Vector3(camRot.x, -camRot.y, camRot.z);
-    mat.setTRS(posXYInv, rotYInv, new Vector3(1, 1, 1));
+    mat.setTRS(posXYInv, rotYInv, Vector3.one);
     mat.inverse();
 
     for (let index = 0; index < vertices.length; index++) {
       const v = vertices[index];
-      const m = mat.multiplyVector(new Vector4(v.x, v.y, v.z, 1));
+      const m = mat.multiplyVector(v.toVector4(1));
 
-      viewedVertices[index] = new Vector3(m.x, m.y, m.z);
+      viewedVertices[index] = m.toVector3();
     }
 
     return viewedVertices;
@@ -318,7 +295,7 @@ export class Renderer {
     for (let i = 0; i < vertices.length; i++) {
       const p = vertices[i];
 
-      const p4 = projectMat.multiplyVector(new Vector4(p.x, p.y, p.z, 1));
+      const p4 = projectMat.multiplyVector(p.toVector4(1));
 
       //ここはビューポート変換
       //X, Y軸それぞれ反転しているので反転する必要がある
@@ -327,9 +304,10 @@ export class Renderer {
       //x, yは+1することで0 ~ 2にして、
       //0.5をかけて0 ~ 1にして縦横の大きさを掛けることで
       //0 ~ width, 0 ~ heightにしている。
-      p4.x = (-p4.x / p4.w + 1) * 0.5 * this.canvasWidth;
-      p4.y = (p4.y / p4.w + 1) * 0.5 * this.canvasHeight;
-      p4.z = p4.z / p4.w;
+      const rw = 1 / p4.w;
+      p4.x = (-p4.x * rw + 1) * 0.5 * this.canvasWidth;
+      p4.y = (p4.y * rw + 1) * 0.5 * this.canvasHeight;
+      p4.z = p4.z * rw;
       projectedVertices[i] = p4;
     }
 
@@ -344,6 +322,8 @@ export class Renderer {
     l.normalize();
 
     //光が三角形に真っすぐに当たっている割合
+    //光が真横、裏から当たってる場合は-1 ~ 0の値になるので
+    //clampで0になる
     return Mathf.clamp(l.dot(n), 0, 1);
   }
 }

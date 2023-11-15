@@ -1,4 +1,5 @@
 import { Mathf } from "./math.js";
+import { Vector4 } from "./vector4.js";
 
 export class Vector3 {
   constructor(x, y, z) {
@@ -17,6 +18,10 @@ export class Vector3 {
 
   static get forward() {
     return new Vector3(0, 0, 1);
+  }
+
+  static get one() {
+    return new Vector3(1, 1, 1);
   }
 
   copy() {
@@ -114,6 +119,10 @@ export class Vector3 {
     const cosTheta = d / (magnitudeA * magnitudeB);
 
     return Math.acos(cosTheta);
+  }
+
+  toVector4(w) {
+    return new Vector4(this.x, this.y, this.z, w);
   }
 
   toString() {

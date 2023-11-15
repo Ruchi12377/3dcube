@@ -1,3 +1,5 @@
+import { Vector3 } from "./vector3.js";
+
 export class Vector4 {
   constructor(x, y, z, w) {
     this.x = Number(x);
@@ -26,6 +28,10 @@ export class Vector4 {
   //正規化を行う
   normalize() {
     this.division(sqrtMagnitude());
+  }
+
+  toVector3() {
+    return new Vector3(this.x, this.y, this.z);
   }
 
   toString() {

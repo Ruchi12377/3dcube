@@ -68,8 +68,12 @@ export class Renderer {
       const shader = geometry.pixelShader;
 
       //頂点とノーマルのY軸反転
-      const vertices = geometry.copiedVertices().map(v => new Vector3(v.x, -v.y, v.z));
-      const normals = geometry.copiedNormals().map(n => new Vector3(n.x, -n.y, n.z));
+      const vertices = geometry
+        .copiedVertices()
+        .map((v) => new Vector3(v.x, -v.y, v.z));
+      const normals = geometry
+        .copiedNormals()
+        .map((n) => new Vector3(n.x, -n.y, n.z));
 
       const mVertices = this.model(vertices, geometry);
       const vVertices = this.view(mVertices, this.camera.pos, this.camera.rot);
@@ -235,55 +239,48 @@ export class Renderer {
     const pos = geometry.pos;
     const posYInv = new Vector3(pos.x, -pos.y, pos.z);
     mat.setTRS(posYInv, geometry.rot, geometry.scale);
-    const modeledVertices = new Array(vertices.length);
 
     //拡大縮小、頂点の回転、平行移動
-    for (let i = 0; i < vertices.length; i++) {
+    const modeledVertices = vertices.map((v) => {
       const v = vertices[i];
       const m = mat.multiplyVector(v.toVector4(1));
-      modeledVertices[i] = m.toVector3();
-    }
+      return m.toVector3();
+    });
 
     return modeledVertices;
   }
 
   modelNormal(normals, geometry) {
     const mat = Matrix4x4.rotation(geometry.rot);
-    const modeledNormals = new Array(normals.length);
-
     //ノーマル
     //頂点の回転
-    for (let i = 0; i < normals.length; i++) {
+    const modeledNormals = normals.map((n) => {
       const n = normals[i];
       const m = mat.multiplyVector(n.toVector4(1));
       modeledNormals[i] = m.toVector3();
-    }
+    });
 
     return modeledNormals;
   }
 
   view(vertices, camPos, camRot) {
-    const viewedVertices = new Array(vertices.length);
     let mat = Matrix4x4.identity;
     const posXYInv = new Vector3(-camPos.x, -camPos.y, camPos.z);
     const rotYInv = new Vector3(camRot.x, -camRot.y, camRot.z);
     mat.setTRS(posXYInv, rotYInv, Vector3.one);
     mat.inverse();
 
-    for (let index = 0; index < vertices.length; index++) {
-      const v = vertices[index];
+    const viewedVertices = vertices.map((v) => {
       const m = mat.multiplyVector(v.toVector4(1));
 
       viewedVertices[index] = m.toVector3();
-    }
 
-    return viewedVertices;
+      return viewedVertices;
+    });
   }
 
   //透視投影変換を用いて3次元の頂点を2次元の画面に変換する
   project(vertices) {
-    const projectedVertices = new Array(vertices.length);
-
     const projectMat = Matrix4x4.projection(
       this.camera.viewableAngle,
       this.canvasHeight,
@@ -292,9 +289,7 @@ export class Renderer {
       this.camera.nearClip
     );
 
-    for (let i = 0; i < vertices.length; i++) {
-      const p = vertices[i];
-
+    const projectedVertices = vertices.map((p) => {
       const p4 = projectMat.multiplyVector(p.toVector4(1));
 
       //ここはビューポート変換
@@ -309,7 +304,7 @@ export class Renderer {
       p4.y = (p4.y * rw + 1) * 0.5 * this.canvasHeight;
       p4.z = p4.z * rw;
       projectedVertices[i] = p4;
-    }
+    });
 
     return projectedVertices;
   }

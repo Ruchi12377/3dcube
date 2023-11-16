@@ -152,7 +152,8 @@ export class Renderer {
           for (let y = parseInt(Math.ceil(vs[0].y)); y < vs[2].y; y++) {
             if (y < 0 || y >= this.canvasHeight) continue;
 
-            const p = Math.abs(vs[0].y - vs[1].y) < 0.1 || y >= vs[1].y ? 1 : 0;
+            const p =
+              Math.abs(vs[0].y - vs[1].y) < 0.001 || y >= vs[1].y ? 1 : 0;
             const ky1 = Mathf.invLerp(vs[p].y, vs[p + 1].y, y);
             const ky2 = Mathf.invLerp(vs[0].y, vs[2].y, y);
             const x1 = Mathf.lerp(vs[p].x, vs[p + 1].x, ky1);
@@ -242,7 +243,6 @@ export class Renderer {
 
     //拡大縮小、頂点の回転、平行移動
     const modeledVertices = vertices.map((v) => {
-      const v = vertices[i];
       const m = mat.multiplyVector(v.toVector4(1));
       return m.toVector3();
     });
@@ -255,9 +255,8 @@ export class Renderer {
     //ノーマル
     //頂点の回転
     const modeledNormals = normals.map((n) => {
-      const n = normals[i];
       const m = mat.multiplyVector(n.toVector4(1));
-      modeledNormals[i] = m.toVector3();
+      return m.toVector3();
     });
 
     return modeledNormals;
@@ -273,10 +272,10 @@ export class Renderer {
     const viewedVertices = vertices.map((v) => {
       const m = mat.multiplyVector(v.toVector4(1));
 
-      viewedVertices[index] = m.toVector3();
-
-      return viewedVertices;
+      return m.toVector3();
     });
+
+    return viewedVertices;
   }
 
   //透視投影変換を用いて3次元の頂点を2次元の画面に変換する
@@ -303,7 +302,7 @@ export class Renderer {
       p4.x = (-p4.x * rw + 1) * 0.5 * this.canvasWidth;
       p4.y = (p4.y * rw + 1) * 0.5 * this.canvasHeight;
       p4.z = p4.z * rw;
-      projectedVertices[i] = p4;
+      return p4;
     });
 
     return projectedVertices;

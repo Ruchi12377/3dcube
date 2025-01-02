@@ -67,6 +67,8 @@ export class Renderer {
       const geometry = geometries[i];
       const shader = geometry.pixelShader;
 
+      console.log(geometry);
+
       //頂点とノーマルのY軸反転
       const vertices = geometry
         .copiedVertices()
@@ -76,7 +78,11 @@ export class Renderer {
         .map((n) => new Vector3(n.x, -n.y, n.z));
 
       const mVertices = this.model(vertices, geometry);
-      const vVertices = this.view(mVertices, this.camera.pos, this.camera.rot);
+      const vVertices = this.view(
+        mVertices,
+        this.camera.transform.pos,
+        this.camera.transform.rot
+      );
       const pVertices = this.project(vVertices);
 
       const mNormals = this.modelNormal(normals, geometry);
@@ -237,9 +243,9 @@ export class Renderer {
 
   model(vertices, geometry) {
     const mat = Matrix4x4.identity;
-    const pos = geometry.pos;
+    const pos = geometry.transform.pos;
     const posYInv = new Vector3(pos.x, -pos.y, pos.z);
-    mat.setTRS(posYInv, geometry.rot, geometry.scale);
+    mat.setTRS(posYInv, geometry.transform.rot, geometry.transform.scale);
 
     //拡大縮小、頂点の回転、平行移動
     const modeledVertices = vertices.map((v) => {
@@ -251,7 +257,7 @@ export class Renderer {
   }
 
   modelNormal(normals, geometry) {
-    const mat = Matrix4x4.rotation(geometry.rot);
+    const mat = Matrix4x4.rotation(geometry.transform.rot);
     //ノーマル
     //頂点の回転
     const modeledNormals = normals.map((n) => {

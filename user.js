@@ -7,6 +7,7 @@ import { Mathf } from "./src/math.js";
 import { ObjFile } from "./src/objFile.js";
 import { Texture } from "./src/texture.js";
 import { Time } from "./src/time.js";
+import { Transform } from "./src/transform.js";
 import { Vector3 } from "./src/vector3.js";
 
 const CameraControlSensitively = 0.1;
@@ -22,8 +23,7 @@ const camera = new Camera(
   60,
   0.3,
   20,
-  new Vector3(0, 1, 0),
-  new Vector3(0, 0, 0)
+  new Transform(new Vector3(0, 1, 0), new Vector3(0, 0, 0), Vector3.one)
 );
 
 const engine = new Engine(
@@ -73,9 +73,11 @@ let bunny;
 const bunnyFile = new ObjFile();
 bunnyFile.loadFromObjFile("./bunny.obj", () => {
   bunny = new Geometry(
-    new Vector3(0, 0, 2),
-    new Vector3(0, 0, 0),
-    new Vector3(1, 1, 1),
+    new Transform(
+      new Vector3(0, 0, 2),
+      new Vector3(0, 0, 0),
+      new Vector3(1, 1, 1)
+    ),
     bunnyFile.vertices,
     bunnyFile.uvs,
     bunnyFile.normals,
@@ -89,9 +91,11 @@ bunnyFile.loadFromObjFile("./bunny.obj", () => {
 const arrowFile = new ObjFile();
 arrowFile.loadFromObjFile("./arrow.obj", () => {
   const arrow = new Geometry(
-    new Vector3(0, 2, 2),
-    new Vector3(0, 0, 180),
-    new Vector3(0.1, 0.1, 0.1),
+    new Transform(
+      new Vector3(0, 2, 2),
+      new Vector3(0, 0, 180),
+      new Vector3(0.1, 0.1, 0.1)
+    ),
     arrowFile.vertices,
     arrowFile.uvs,
     arrowFile.normals,
@@ -105,9 +109,11 @@ arrowFile.loadFromObjFile("./arrow.obj", () => {
 const arrow3dFile = new ObjFile();
 arrow3dFile.loadFromObjFile("./arrow3d.obj", () => {
   const arrow3d = new Geometry(
-    new Vector3(0, 0, 0),
-    new Vector3(0, 0, 0),
-    new Vector3(1, 1, 1),
+    new Transform(
+      new Vector3(0, 0, 0),
+      new Vector3(0, 0, 0),
+      new Vector3(1, 1, 1)
+    ),
     arrow3dFile.vertices,
     arrow3dFile.uvs,
     arrow3dFile.normals,
@@ -146,7 +152,7 @@ canvas.addEventListener(
 
 canvas.addEventListener(
   "touchend",
-  (event) => {
+  (_event) => {
     previousTouch = undefined;
   },
   false
@@ -154,16 +160,20 @@ canvas.addEventListener(
 
 function moveCamera(movementX, movementY) {
   const cameraLimit = camera.viewableAngle / 2;
-  camera.rot.x += movementY * CameraControlSensitively;
-  camera.rot.x = Mathf.clamp(camera.rot.x, -cameraLimit, cameraLimit);
-  camera.rot.y += movementX * CameraControlSensitively;
+  camera.transform.rot.x += movementY * CameraControlSensitively;
+  camera.transform.rot.x = Mathf.clamp(
+    camera.transform.rot.x,
+    -cameraLimit,
+    cameraLimit
+  );
+  camera.transform.rot.y += movementX * CameraControlSensitively;
 }
 
 function update() {
   threshold = Math.abs(Math.sin(Time.currentFrame * 0.005));
 
   if (bunny) {
-    bunny.rot.y += 0.5;
+    bunny.transform.rot.y += 0.5;
   }
 
   let moveX = 0;
@@ -194,7 +204,7 @@ function update() {
   moveVector.add(zVec);
   moveVector.y = 0;
   moveVector.multiply(Time.deltaTime);
-  camera.pos.add(moveVector);
+  camera.transform.pos.add(moveVector);
 
   if (Input.getKeyDown(KeyCode.Space) && canJump) {
     fallSpeed = 0.05;
@@ -202,11 +212,11 @@ function update() {
   }
 
   fallSpeed += gravity * Time.deltaTime;
-  camera.pos.y += fallSpeed;
+  camera.transform.pos.y += fallSpeed;
 
   //地面にいる
-  if (camera.pos.y <= 1) {
-    camera.pos.y = 1;
+  if (camera.transform.pos.y <= 1) {
+    camera.transform.pos.y = 1;
     fallSpeed = 0;
     canJump = true;
   }
@@ -222,6 +232,6 @@ function drawUI(context) {
   context.font = "32px sans-serif";
   context.fillStyle = "#555";
   context.fillText(fps.toFixed(0) + " FPS", 5, 30);
-  // context.fillText("Camera Pos : " + camera.pos.toString(), 5, 60);
-  // context.fillText("Camera Rot : " + camera.rot.toString(), 5, 90);
+  // context.fillText("Camera Pos : " + camera.transform.pos.toString(), 5, 60);
+  // context.fillText("Camera Rot : " + camera.transform.rot.toString(), 5, 90);
 }

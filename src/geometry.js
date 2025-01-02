@@ -1,14 +1,12 @@
 export class Geometry {
-  constructor(pos, rot, scale, vertices, uvs, normals, faces, pixelShader) {
-    this.pos = pos;
-    this.rot = rot;
-    this.scale = scale;
+  constructor(transform, vertices, uvs, normals, faces, material) {
+    this.transform = transform;
 
     this.vertices = vertices;
     this.uvs = uvs;
     this.normals = normals;
     this.faces = faces;
-    this.pixelShader = pixelShader;
+    this.material = material;
   }
 
   copiedVertices() {

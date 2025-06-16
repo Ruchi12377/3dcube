@@ -3,6 +3,7 @@ import { Engine } from "./src/engine.js";
 import { Geometry } from "./src/geometry.js";
 import { Input } from "./src/input.js";
 import { KeyCode } from "./src/keyCode.js";
+import { Material } from "./src/material.js";
 import { Mathf } from "./src/math.js";
 import { ObjFile } from "./src/objFile.js";
 import { Texture } from "./src/texture.js";
@@ -82,7 +83,11 @@ bunnyFile.loadFromObjFile("./bunny.obj", () => {
     bunnyFile.uvs,
     bunnyFile.normals,
     bunnyFile.faces,
-    dissolve
+    new Material(
+      new Vector3(1, 1, 1),
+      new Vector3(0, 0, 0),
+      dissolve
+    )
   );
 
   engine.geometries.push(bunny);
@@ -100,7 +105,11 @@ arrowFile.loadFromObjFile("./arrow.obj", () => {
     arrowFile.uvs,
     arrowFile.normals,
     arrowFile.faces,
-    standard
+    new Material(
+      new Vector3(1, 1, 1),
+      new Vector3(0, 0, 0),
+      standard
+    )
   );
 
   engine.geometries.push(arrow);
@@ -118,7 +127,11 @@ arrow3dFile.loadFromObjFile("./arrow3d.obj", () => {
     arrow3dFile.uvs,
     arrow3dFile.normals,
     arrow3dFile.faces,
-    standardArrow
+    new Material(
+      new Vector3(1, 1, 1),
+      new Vector3(0, 0, 0),
+      standardArrow
+    )
   );
 
   engine.geometries.push(arrow3d);

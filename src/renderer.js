@@ -65,9 +65,7 @@ export class Renderer {
 
     for (let i = 0; i < geometries.length; i++) {
       const geometry = geometries[i];
-      const shader = geometry.pixelShader;
-
-      console.log(geometry);
+      const shader = geometry.material.pixelShader;
 
       //頂点とノーマルのY軸反転
       const vertices = geometry
